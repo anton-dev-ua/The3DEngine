@@ -1,13 +1,13 @@
 package gui;
 
 import engine.Cube;
-import engine.Point;
+import engine.Mesh;
 import engine.Scene;
+import engine.Vertex;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
-import sample.ScreenPoint;
 
 public class Visualizer {
 
@@ -24,7 +24,7 @@ public class Visualizer {
         this.fov = fov;
         dist = xSize / 2 / Math.tan(fov * Math.PI / 360);
         scene = new Scene();
-        scene.setObject(new Cube(200));
+        scene.setMesh(new Cube(200));
     }
 
     public Pane createScenePane() {
@@ -34,25 +34,25 @@ public class Visualizer {
 
     public void drawScene() {
         root.getChildren().clear();
-        engine.Object object = scene.getObject();
+        Mesh mesh = scene.getMesh();
 
-        Point[] objPoints = object.getPoints();
-        Point[] screenPoints = new Point[objPoints.length];
+        Vertex[] objVertices = mesh.getVertices();
+        Vertex[] screenPoints = new Vertex[objVertices.length];
 
-        for (int i = 0; i < objPoints.length; i++) {
-            Point objPoint = objPoints[i];
-            screenPoints[i] = toScreenPoint(objPoint);
+        for (int i = 0; i < objVertices.length; i++) {
+            Vertex objVertex = objVertices[i];
+            screenPoints[i] = toScreenPoint(objVertex);
         }
 
-        for (engine.Object.Face face : object.getFaces()) {
-            int[] pointIndices = face.getPointIndices();
+        for (Mesh.Face face : mesh.getFaces()) {
+            int[] pointIndices = face.getVertexIndices();
             for (int i = 0; i < pointIndices.length; i++) {
 
                 int pointIndex = pointIndices[i];
                 int nextPointIndex = i < pointIndices.length - 1 ? pointIndices[i + 1] : pointIndices[0];
 
-                Point startPoint = screenPoints[pointIndex];
-                Point endPoint = screenPoints[nextPointIndex];
+                Vertex startPoint = screenPoints[pointIndex];
+                Vertex endPoint = screenPoints[nextPointIndex];
                 Line screenLine = new Line(
                         startPoint.getX(), startPoint.getY(),
                         endPoint.getX(), endPoint.getY()
@@ -71,7 +71,7 @@ public class Visualizer {
     double phi = Math.toRadians(10);
     double barb = 20;
 
-    private void drawHead(Point startPoint, Point endPoint) {
+    private void drawHead(Vertex startPoint, Vertex endPoint) {
 
         Line head1 = new Line();
         Line head2 = new Line();
@@ -100,15 +100,15 @@ public class Visualizer {
         root.getChildren().add(head2);
     }
 
-    private Point toScreenPoint(Point point) {
-        return new Point(
-                xSize / 2 + point.getX() * dist / (point.getZ() + dist),
-                ySize / 2 - point.getY() * dist / (point.getZ() + dist),
+    private Vertex toScreenPoint(Vertex vertex) {
+        return new Vertex(
+                xSize / 2 + vertex.getX() * dist / (vertex.getZ() + dist),
+                ySize / 2 - vertex.getY() * dist / (vertex.getZ() + dist),
                 0
         );
     }
 
-    private Text textPointNumber(Point point, int pointIndex) {
+    private Text textPointNumber(Vertex point, int pointIndex) {
         Text text = new Text(point.getX(), point.getY(), "" + pointIndex);
         text.setStroke(Color.GREEN);
         return text;

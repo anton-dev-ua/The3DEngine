@@ -2,10 +2,10 @@ package engine;
 
 import static engine.ObjectUtils.point;
 
-public class Cube extends Object {
+public class Cube extends Mesh {
 
     public Cube(double size) {
-        super(new Point[]{
+        super(new Vertex[]{
                         point(-size/2, size/2, -size/2),
                         point(size/2, size/2, -size/2),
                         point(size/2, -size/2, -size/2),

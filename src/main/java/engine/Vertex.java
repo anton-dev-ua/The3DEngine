@@ -1,9 +1,9 @@
 package engine;
 
-public class Point {
+public class Vertex {
     private double x, y, z;
 
-    public Point(double x, double y, double z) {
+    public Vertex(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;

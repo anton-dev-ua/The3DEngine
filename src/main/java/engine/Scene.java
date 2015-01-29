@@ -1,13 +1,13 @@
 package engine;
 
 public class Scene {
-    private Object object;
+    private Mesh mesh;
 
-    public void setObject(Object object) {
-        this.object = object;
+    public void setMesh(Mesh mesh) {
+        this.mesh = mesh;
     }
 
-    public Object getObject() {
-        return object;
+    public Mesh getMesh() {
+        return mesh;
     }
 }
