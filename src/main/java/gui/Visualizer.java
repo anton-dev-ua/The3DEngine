@@ -8,8 +8,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
 
-import static engine.CubeBuilder.aCube;
-
 public class Visualizer {
 
     private final Scene scene;
@@ -19,16 +17,13 @@ public class Visualizer {
     private double dist = xSize / 2 / Math.tan(fov * Math.PI / 360);
     private Pane root;
 
-    public Visualizer(double xSize, double ySize, double fov) {
+    public Visualizer(Scene scene, double xSize, double ySize, double fov) {
+        this.scene = scene;
         this.xSize = xSize;
         this.ySize = ySize;
         this.fov = fov;
         dist = xSize / 2 / Math.tan(fov * Math.PI / 360);
-        scene = new Scene();
-        scene.setMesh(aCube()
-                        .withEdgeLength(200)
-                        .build()
-        );
+
     }
 
     public Pane createScenePane() {
