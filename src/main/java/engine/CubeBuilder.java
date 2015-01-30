@@ -2,7 +2,7 @@ package engine;
 
 public class CubeBuilder extends MeshBuilder {
 
-    private double edgeLength;
+    private double edgeLength = 200;
 
     public static CubeBuilder aCube() {
         return new CubeBuilder();

@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
-import static engine.CubeBuilder.aCube;
+import static engine.TorusBuilder.aTorus;
 
 public class Main extends Application {
 
@@ -24,10 +24,18 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
 
         scene = new engine.Scene();
-        scene.setMesh(aCube()
-                        .withEdgeLength(200)
+//        scene.setMesh(aCube()
+//                        .withEdgeLength(200)
+//                        .build()
+//        );
+
+        scene.setMesh(aTorus()
+                        .withBigRadius(150)
+                        .withSmallRadius(60)
+                        .withApproximationNumber(10)
                         .build()
         );
+
         visualizer = new Visualizer(scene, width, height, 90);
 
         primaryStage.setTitle("3D Engine");
@@ -35,14 +43,14 @@ public class Main extends Application {
         primaryStage.setX(Screen.getPrimary().getVisualBounds().getWidth() - width);
         primaryStage.setY(0);
 
-        sutupKeyHundlers(primaryStage);
+        sutUpKeyHandlers(primaryStage);
 
         visualizer.drawScene();
 
         primaryStage.show();
     }
 
-    private void sutupKeyHundlers(final Stage primaryStage) {
+    private void sutUpKeyHandlers(final Stage primaryStage) {
         primaryStage.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {

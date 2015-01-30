@@ -62,7 +62,7 @@ public class Visualizer {
 
 //                drawHead(startPoint, endPoint);
 
-                root.getChildren().add(textPointNumber(startPoint, pointIndex));
+//                root.getChildren().add(textPointNumber(startPoint, pointIndex));
             }
         }
     }
