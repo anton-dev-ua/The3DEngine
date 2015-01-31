@@ -42,6 +42,20 @@ public class Main extends Application {
 
         scene.setMesh(aLetterA().withHeight(300).build());
 
+//       scene.setMesh(
+//               new Mesh(
+//                       new Vertex[]{
+//                               new Vertex(100, 150, 0),
+//                               new Vertex(70, -50, 0),
+//                               new Vertex(-70, -50, 0),
+//                               new Vertex(-100, 150, 0),
+//                               new Vertex(0, 0, 0)},
+//                       new Mesh.Face[] {
+//                               new Mesh.Face(0,1,2,3,4)
+//                       }
+//               )
+//       );
+
         visualizer = new Visualizer(scene, width, height, 90);
 
         primaryStage.setTitle("3D Engine");
@@ -87,6 +101,9 @@ public class Main extends Application {
                 if (event.getCode() == KeyCode.O) {
                     scene.getMesh().reset();
                     angle = 0;
+                }
+                if (event.getCode() == KeyCode.T) {
+                    scene.getMesh().triangulate();
                 }
                 if (event.getCode() == KeyCode.V) {
                     visualizer.setShowVertexNumber(!visualizer.isShowVertexNumber());

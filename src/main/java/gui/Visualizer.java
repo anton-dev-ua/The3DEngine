@@ -45,7 +45,7 @@ public class Visualizer {
     long frame = 0;
     long startTime;
     long spentTime;
-    
+
     public void drawScene() {
         gc.clearRect(0, 0, xSize, ySize);
 
@@ -59,6 +59,19 @@ public class Visualizer {
             screenPoints[i] = toScreenPoint(objVertex);
         }
 
+        gc.setStroke(Color.GRAY);
+        for (Mesh.Triangle triangle : mesh.getTriangles()) {
+            Vertex v1 = screenPoints[triangle.getI1()];
+            Vertex v2 = screenPoints[triangle.getI2()];
+            Vertex v3 = screenPoints[triangle.getI3()];
+
+            gc.strokeLine(v1.getX(), v1.getY(), v2.getX(), v2.getY());
+            gc.strokeLine(v1.getX(), v1.getY(), v3.getX(), v3.getY());
+            gc.strokeLine(v2.getX(), v2.getY(), v1.getX(), v1.getY());
+
+        }
+
+        gc.setStroke(Color.WHITE);
         for (Mesh.Face face : mesh.getFaces()) {
             int[] pointIndices = face.getVertexIndices();
             for (int i = 0; i < pointIndices.length; i++) {
@@ -73,10 +86,10 @@ public class Visualizer {
                         endPoint.getX(), endPoint.getY()
                 );
 
-                if(showArrows) {
+                if (showArrows) {
                     drawHead(startPoint, endPoint);
                 }
-                if(showVertexNumber) {
+                if (showVertexNumber) {
                     gc.fillText(String.valueOf(pointIndex), startPoint.getX(), startPoint.getY());
                 }
             }
