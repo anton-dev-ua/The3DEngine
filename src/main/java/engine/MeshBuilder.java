@@ -9,4 +9,12 @@ public class MeshBuilder {
     protected Mesh.Face face(int... vertexIndices) {
         return new Mesh.Face(vertexIndices);
     }
+
+    protected Mesh.Face[] faces(Mesh.Face... faces) {
+        return faces;
+    }
+
+    protected Vertex[] vertices(Vertex... vertices) {
+        return vertices;
+    }
 }

@@ -9,6 +9,10 @@ public class Vertex {
         this.z = z;
     }
 
+    public Vertex multiply(double a) {
+        return new Vertex(x * a, y * a, z * a);
+    }
+
     public double getX() {
         return x;
     }

@@ -1,6 +1,7 @@
 package gui;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -9,7 +10,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
-import static engine.TorusBuilder.aTorus;
+import java.util.concurrent.CountDownLatch;
+
+import static engine.LetterABuilder.aLetterA;
 
 public class Main extends Application {
 
@@ -19,6 +22,7 @@ public class Main extends Application {
     private int height = 600;
     private engine.Scene scene;
     private double angle = 0;
+    private boolean running = true;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -29,12 +33,14 @@ public class Main extends Application {
 //                        .build()
 //        );
 
-        scene.setMesh(aTorus()
-                        .withBigRadius(150)
-                        .withSmallRadius(60)
-                        .withApproximationNumber(10)
-                        .build()
-        );
+//        scene.setMesh(aTorus()
+//                        .withBigRadius(150)
+//                        .withSmallRadius(60)
+//                        .withApproximationNumber(10)
+//                        .build()
+//        );
+
+        scene.setMesh(aLetterA().withHeight(300).build());
 
         visualizer = new Visualizer(scene, width, height, 90);
 
@@ -45,20 +51,36 @@ public class Main extends Application {
 
         sutUpKeyHandlers(primaryStage);
 
-        visualizer.drawScene();
-
         primaryStage.show();
+
+        primaryStage.setOnCloseRequest(event -> running = false);
+
+        startDrawingThread();
+    }
+
+    private void startDrawingThread() {
+        new Thread(() -> {
+            long fps = 60;
+            long redrawSync = 1000000000 / fps;
+            long lastTime = 0;
+            while (running) {
+                if (System.nanoTime() - lastTime > redrawSync) {
+                    lastTime = System.nanoTime();
+                    waitForDisplaying(() -> visualizer.drawScene());
+                }
+            }
+        }).start();
     }
 
     private void sutUpKeyHandlers(final Stage primaryStage) {
         primaryStage.getScene().setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
-                if (event.getCode() == KeyCode.OPEN_BRACKET) {
+                if (event.getCode() == KeyCode.LEFT) {
                     angle += 5;
                     scene.getMesh().rotateY(angle);
                 }
-                if (event.getCode() == KeyCode.CLOSE_BRACKET) {
+                if (event.getCode() == KeyCode.RIGHT) {
                     angle -= 5;
                     scene.getMesh().rotateY(angle);
                 }
@@ -66,12 +88,33 @@ public class Main extends Application {
                     scene.getMesh().reset();
                     angle = 0;
                 }
+                if (event.getCode() == KeyCode.V) {
+                    visualizer.setShowVertexNumber(!visualizer.isShowVertexNumber());
+                }
+                if (event.getCode() == KeyCode.A) {
+                    visualizer.setShowArrows(!visualizer.isShowArrows());
+                }
+
+
                 if (event.getCode() == KeyCode.Q) {
+                    running = false;
                     primaryStage.close();
                 }
-                visualizer.drawScene();
             }
         });
+    }
+
+    private void waitForDisplaying(Runnable operation) {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            operation.run();
+            countDownLatch.countDown();
+        });
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

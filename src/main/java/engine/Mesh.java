@@ -11,7 +11,7 @@ public class Mesh {
     public Mesh(Vertex[] vertices, Face[] face) {
         originalVertices = Arrays.copyOf(vertices, vertices.length);
         this.vertices = Arrays.copyOf(vertices, vertices.length);
-        this.faces = face;
+        this.faces = Arrays.copyOf(face, face.length);
     }
 
     public Vertex[] getVertices() {
@@ -38,6 +38,14 @@ public class Mesh {
 
     public void reset() {
         this.vertices = Arrays.copyOf(originalVertices, vertices.length);
+    }
+
+    public Mesh scale(double scale) {
+        Vertex scaled[] = new Vertex[originalVertices.length];
+        for (int i = 0; i < originalVertices.length; i++) {
+            scaled[i] = originalVertices[i].multiply(scale);
+        }
+        return new Mesh(scaled, faces);
     }
 
     public static class Face {

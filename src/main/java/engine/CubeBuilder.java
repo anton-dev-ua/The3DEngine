@@ -42,12 +42,4 @@ public class CubeBuilder extends MeshBuilder {
         );
     }
 
-    private Mesh.Face[] faces(Mesh.Face... faces) {
-        return faces;
-    }
-
-    private Vertex[] vertices(Vertex... vertices) {
-        return vertices;
-    }
-
 }
