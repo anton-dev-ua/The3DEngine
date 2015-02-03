@@ -12,7 +12,7 @@ import javafx.stage.Stage;
 
 import java.util.concurrent.CountDownLatch;
 
-import static engine.LetterABuilder.aLetterA;
+import static engine.SimpleRoomBuilder.aSimpleRoom;
 
 public class Main extends Application {
 
@@ -40,7 +40,8 @@ public class Main extends Application {
 //                        .build()
 //        );
 
-        scene.setMesh(aLetterA().withHeight(300).build());
+//        scene.setMesh(aLetterA().withHeight(300).build());
+        scene.setMesh(aSimpleRoom().build());
 
 //       scene.setMesh(
 //               new Mesh(
@@ -92,15 +93,17 @@ public class Main extends Application {
             public void handle(KeyEvent event) {
                 if (event.getCode() == KeyCode.LEFT) {
                     angle += 5;
-                    scene.getMesh().rotateY(angle);
+                    visualizer.setAngle(angle);
                 }
                 if (event.getCode() == KeyCode.RIGHT) {
                     angle -= 5;
-                    scene.getMesh().rotateY(angle);
+                    visualizer.setAngle(angle);
+
                 }
                 if (event.getCode() == KeyCode.O) {
                     scene.getMesh().reset();
                     angle = 0;
+                    visualizer.setAngle(angle);
                 }
                 if (event.getCode() == KeyCode.T) {
                     scene.getMesh().triangulate();

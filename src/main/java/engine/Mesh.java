@@ -11,26 +11,32 @@ import static engine.Mesh.Pair.pair;
 import static java.lang.Math.*;
 
 public class Mesh {
-    private Vertex[] vertices, originalVertices;
-    private Face[] faces;
+    public static final int ADD_AS_IS = 0;
+    public static final int REMOVE = 1;
+    public static final int CUT = 2;
+    private Vertex[] originalVertices;
+    private Face[] originalFaces;
+    private List<Vertex> vertices;
+    private List<Face> faces;
     private Triangle[] triangles = new Triangle[0];
 
     public Mesh(Vertex[] vertices, Face[] face) {
         originalVertices = Arrays.copyOf(vertices, vertices.length);
-        this.vertices = Arrays.copyOf(vertices, vertices.length);
-        this.faces = Arrays.copyOf(face, face.length);
+        originalFaces = Arrays.copyOf(face, face.length);
+        rotateY(0);
     }
 
     public Vertex[] getVertices() {
-        return vertices;
+        return vertices.toArray(new Vertex[vertices.size()]);
     }
 
     public Face[] getFaces() {
-        return faces;
+        return faces.toArray(new Face[faces.size()]);
     }
 
     public void rotateY(double a) {
         double ar = toRadians(a);
+        vertices = new ArrayList<>(originalVertices.length);
 
         for (int i = 0; i < originalVertices.length; i++) {
 
@@ -39,12 +45,85 @@ public class Mesh {
             double x = vertex.getX() * cos(ar) + vertex.getZ() * sin(ar);
             double y = vertex.getY();
             double z = -vertex.getX() * sin(ar) + vertex.getZ() * cos(ar);
-            vertices[i] = new Vertex(x, y, z);
+            vertices.add(new Vertex(x, y, z));
+        }
+    }
+
+    public void cutByCameraPyramid(double z) {
+        faces = new ArrayList<>();
+        double cutPlane = z + 1;
+
+        for (Vertex vertex : vertices) {
+            if (vertex.getZ() < cutPlane) {
+                vertex.setBehindCamera(true);
+            }
+        }
+
+        for (Triangle triangle : triangles) {
+            cutFace(cutPlane, triangle.getFace());
+        }
+
+        for (Face face : originalFaces) {
+            cutFace(cutPlane, face);
+        }
+
+    }
+
+    private void cutFace(double cutPlane, Face face) {
+        int[] vertexIndices = face.getVertexIndices();
+        int transformMode = ADD_AS_IS;
+        for (int j = 0; j < vertexIndices.length; j++) {
+            Vertex v = vertices.get(vertexIndices[j]);
+            if (v.isBehindCamera()) {
+                if (j > 0 && transformMode == ADD_AS_IS) {
+                    transformMode = CUT;
+                    break;
+                } else {
+                    transformMode = REMOVE;
+                }
+            } else if (transformMode == REMOVE) {
+                transformMode = CUT;
+                break;
+            }
+        }
+
+        if (ADD_AS_IS == transformMode) {
+            faces.add(face);
+        } else if (CUT == transformMode) {
+
+            List<Integer> newVertexIndices = new ArrayList<>(20);
+            for (int j = 0; j < vertexIndices.length; j++) {
+                int vi1 = vertexIndices[j];
+                int vi2 = vertexIndices[j < vertexIndices.length - 1 ? j + 1 : 0];
+                Vertex v1 = vertices.get(vi1);
+                Vertex v2 = vertices.get(vi2);
+
+                if (!v1.isBehindCamera()) {
+                    newVertexIndices.add(vi1);
+                }
+
+                if (v1.isBehindCamera() != v2.isBehindCamera()) {
+                    double x = v1.getX() + (v2.getX() - v1.getX()) * (cutPlane - v1.getZ()) / (v2.getZ() - v1.getZ());
+                    double y = v1.getY() + (v2.getY() - v1.getY()) * (cutPlane - v1.getZ()) / (v2.getZ() - v1.getZ());
+
+                    vertices.add(new Vertex(x, y, cutPlane));
+
+                    newVertexIndices.add(vertices.size() - 1);
+                }
+
+            }
+
+            int[] newVertexIndicesForFace = new int[newVertexIndices.size()];
+            for (int t = 0; t < newVertexIndices.size(); t++) newVertexIndicesForFace[t] = newVertexIndices.get(t);
+
+            Face newFace = new Face(newVertexIndicesForFace);
+            newFace.color = face.color;
+            faces.add(newFace);
         }
     }
 
     public void reset() {
-        this.vertices = Arrays.copyOf(originalVertices, vertices.length);
+        this.vertices = new ArrayList<>(Arrays.asList(originalVertices));
         triangles = new Triangle[0];
     }
 
@@ -53,13 +132,13 @@ public class Mesh {
         for (int i = 0; i < originalVertices.length; i++) {
             scaled[i] = originalVertices[i].multiply(scale);
         }
-        return new Mesh(scaled, faces);
+        return new Mesh(scaled, faces.toArray(new Face[faces.size()]));
     }
 
     public void triangulate() {
         List<Triangle> trianglesList = new ArrayList<>();
 
-        for (Face face : faces) {
+        for (Face face : originalFaces) {
             Vertex[] projXYPoints = getProjection(face, vertex -> new Vertex(vertex.getX(), vertex.getY(), 0));
             Vertex[] projXZPoints = getProjection(face, vertex -> new Vertex(vertex.getX(), vertex.getZ(), 0));
             Vertex[] projYZPoints = getProjection(face, vertex -> new Vertex(vertex.getY(), vertex.getZ(), 0));
@@ -70,13 +149,13 @@ public class Mesh {
 
             Vertex[] projPoints;
             if (xyProjectionArea > xzProjectionArea && xyProjectionArea > yzProjectionArea) {
-                projPoints =  projXYPoints;
+                projPoints = projXYPoints;
             } else if (xzProjectionArea > xyProjectionArea && xzProjectionArea > yzProjectionArea) {
                 projPoints = projXZPoints;
             } else {
-                projPoints = projYZPoints ;
+                projPoints = projYZPoints;
             }
-            int minPointIndex = IntStream.range(0, projPoints.length).mapToObj(i -> pair(i, projPoints[i].getX())).min((p1, p2) -> p1.v <  p2.v ? -1 : 1).get().i;
+            int minPointIndex = IntStream.range(0, projPoints.length).mapToObj(i -> pair(i, projPoints[i].getX())).min((p1, p2) -> p1.v < p2.v ? -1 : 1).get().i;
 
             double sign;
             {
@@ -169,6 +248,7 @@ public class Mesh {
 
     public static class Face {
         int vertexIndices[];
+        public ColorRGB color = new ColorRGB(1, 1, 1);
 
         public Face(int... vertexIndices) {
             this.vertexIndices = vertexIndices;
@@ -198,6 +278,12 @@ public class Mesh {
 
         public int getI3() {
             return i3;
+        }
+
+        public Face getFace() {
+            Face face = new Face(i1, i2, i3);
+            face.color = new ColorRGB(.5, .5, .5);
+            return face;
         }
     }
 }

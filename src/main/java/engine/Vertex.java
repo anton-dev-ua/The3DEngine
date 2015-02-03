@@ -2,6 +2,7 @@ package engine;
 
 public class Vertex {
     private double x, y, z;
+    private boolean behindCamera;
 
     public Vertex(double x, double y, double z) {
         this.x = x;
@@ -31,5 +32,13 @@ public class Vertex {
 
     public Vertex multiply(Vertex v) {
         return new Vertex(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
+    }
+
+    public void setBehindCamera(boolean behindCamera) {
+        this.behindCamera = behindCamera;
+    }
+
+    public boolean isBehindCamera() {
+        return behindCamera;
     }
 }

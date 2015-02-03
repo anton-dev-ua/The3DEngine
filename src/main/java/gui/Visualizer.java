@@ -22,6 +22,8 @@ public class Visualizer {
 
     private boolean showVertexNumber;
     private boolean showArrows;
+    private double angle = 0;
+    private double fps;
 
     public Visualizer(Scene scene, double xSize, double ySize, double fov) {
         this.scene = scene;
@@ -50,6 +52,8 @@ public class Visualizer {
         gc.clearRect(0, 0, xSize, ySize);
 
         Mesh mesh = scene.getMesh();
+        mesh.rotateY(angle);
+        mesh.cutByCameraPyramid(-dist);
 
         Vertex[] objVertices = mesh.getVertices();
         Vertex[] screenPoints = new Vertex[objVertices.length];
@@ -59,20 +63,20 @@ public class Visualizer {
             screenPoints[i] = toScreenPoint(objVertex);
         }
 
-        gc.setStroke(Color.GRAY);
-        for (Mesh.Triangle triangle : mesh.getTriangles()) {
-            Vertex v1 = screenPoints[triangle.getI1()];
-            Vertex v2 = screenPoints[triangle.getI2()];
-            Vertex v3 = screenPoints[triangle.getI3()];
+//        gc.setStroke(Color.GRAY);
+//        for (Mesh.Triangle triangle : mesh.getTriangles()) {
+//            Vertex v1 = screenPoints[triangle.getI1()];
+//            Vertex v2 = screenPoints[triangle.getI2()];
+//            Vertex v3 = screenPoints[triangle.getI3()];
+//
+//            gc.strokeLine(v1.getX(), v1.getY(), v2.getX(), v2.getY());
+//            gc.strokeLine(v1.getX(), v1.getY(), v3.getX(), v3.getY());
+//            gc.strokeLine(v2.getX(), v2.getY(), v1.getX(), v1.getY());
+//
+//        }
 
-            gc.strokeLine(v1.getX(), v1.getY(), v2.getX(), v2.getY());
-            gc.strokeLine(v1.getX(), v1.getY(), v3.getX(), v3.getY());
-            gc.strokeLine(v2.getX(), v2.getY(), v1.getX(), v1.getY());
-
-        }
-
-        gc.setStroke(Color.WHITE);
         for (Mesh.Face face : mesh.getFaces()) {
+            gc.setStroke(new Color(face.color.red, face.color.green, face.color.blue, 1));
             int[] pointIndices = face.getVertexIndices();
             for (int i = 0; i < pointIndices.length; i++) {
 
@@ -98,10 +102,11 @@ public class Visualizer {
         frame++;
 
         if ((spentTime = System.currentTimeMillis() - startTime) > 1000) {
-            System.out.printf("\rFPS: %,4.0f", (double) (frame * 1000) / spentTime);
+            fps = (double) (frame * 1000) / spentTime;
             frame = 0;
             startTime = System.currentTimeMillis();
         }
+        gc.fillText(String.format("FPS: %,4.0f", fps), 10, 20);
     }
 
     double phi = toRadians(10);
@@ -148,5 +153,9 @@ public class Visualizer {
 
     public void setShowArrows(boolean showArrows) {
         this.showArrows = showArrows;
+    }
+
+    public void setAngle(double angle) {
+        this.angle = angle;
     }
 }
