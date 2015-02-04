@@ -1,5 +1,6 @@
 package gui;
 
+import engine.ColladaReader;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -12,10 +13,7 @@ import javafx.stage.Stage;
 
 import java.util.concurrent.CountDownLatch;
 
-import static engine.SimpleRoomBuilder.aSimpleRoom;
-
 public class Main extends Application {
-
 
     private Visualizer visualizer;
     private int width = 800;
@@ -41,7 +39,8 @@ public class Main extends Application {
 //        );
 
 //        scene.setMesh(aLetterA().withHeight(300).build());
-        scene.setMesh(aSimpleRoom().build());
+//        scene.setMesh(aSimpleRoom().build());
+        scene.setMesh(new ColladaReader().readFile("/Users/anton/Documents/temp/room-with-corner-stand.dae"));
 
 //       scene.setMesh(
 //               new Mesh(

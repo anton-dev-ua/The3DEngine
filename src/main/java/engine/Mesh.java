@@ -132,7 +132,7 @@ public class Mesh {
         for (int i = 0; i < originalVertices.length; i++) {
             scaled[i] = originalVertices[i].multiply(scale);
         }
-        return new Mesh(scaled, faces.toArray(new Face[faces.size()]));
+        return new Mesh(scaled, originalFaces);
     }
 
     public void triangulate() {
@@ -285,5 +285,13 @@ public class Mesh {
             face.color = new ColorRGB(.5, .5, .5);
             return face;
         }
+    }
+
+    public Vertex[] getOriginalVertices() {
+        return originalVertices;
+    }
+
+    public Face[] getOriginalFaces() {
+        return originalFaces;
     }
 }
