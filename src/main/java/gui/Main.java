@@ -1,6 +1,8 @@
 package gui;
 
+import engine.Camera;
 import engine.ColladaReader;
+import engine.Vertex;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -13,14 +15,18 @@ import javafx.stage.Stage;
 
 import java.util.concurrent.CountDownLatch;
 
+import static java.lang.Math.*;
+
 public class Main extends Application {
 
     private Visualizer visualizer;
     private int width = 800;
     private int height = 600;
     private engine.Scene scene;
-    private double angle = 0;
+    private double angleY = 0;
     private boolean running = true;
+    private Vertex moveVector = new Vertex(0, 0, 0);
+    private double angleX;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -30,6 +36,10 @@ public class Main extends Application {
 //                        .withEdgeLength(200)
 //                        .build()
 //        );
+
+//        scene.setMesh(aCameraPyramid().build());
+
+        scene.setCamera(new Camera(width, height, 90));
 
 //        scene.setMesh(aTorus()
 //                        .withBigRadius(150)
@@ -91,18 +101,55 @@ public class Main extends Application {
             @Override
             public void handle(KeyEvent event) {
                 if (event.getCode() == KeyCode.LEFT) {
-                    angle += 5;
-                    visualizer.setAngle(angle);
+                    angleY -= 5;
+                    visualizer.setAngleY(angleY);
                 }
                 if (event.getCode() == KeyCode.RIGHT) {
-                    angle -= 5;
-                    visualizer.setAngle(angle);
+                    angleY += 5;
+                    visualizer.setAngleY(angleY);
 
+                }
+                if (event.getCode() == KeyCode.G) {
+                    angleX += 5;
+                    visualizer.setAngleX(angleX);
+                }
+                if (event.getCode() == KeyCode.B) {
+                    angleX -= 5;
+                    visualizer.setAngleX(angleX);
+
+                }
+                if (event.getCode() == KeyCode.UP) {
+                    double step = 10;
+                    double dz = step * cos(toRadians(angleY));
+                    double dx = step * sin(toRadians(angleY));
+                    moveVector = moveVector.plus(new Vertex(dx, 0, dz));
+                    visualizer.setMoveVector(moveVector);
+
+                }
+                if (event.getCode() == KeyCode.DOWN) {
+                    double step = -10;
+                    double dz = step * cos(toRadians(angleY));
+                    double dx = step * sin(toRadians(angleY));
+                    moveVector = moveVector.plus(new Vertex(dx, 0, dz));
+                    visualizer.setMoveVector(moveVector);
+
+                }
+                if(event.getCode() == KeyCode.H) {
+                    moveVector = moveVector.plus(new Vertex(0, 5, 0));
+                    visualizer.setMoveVector(moveVector);
+                }
+                if(event.getCode() == KeyCode.N) {
+                    moveVector = moveVector.plus(new Vertex(0, -5, 0));
+                    visualizer.setMoveVector(moveVector);
                 }
                 if (event.getCode() == KeyCode.O) {
                     scene.getMesh().reset();
-                    angle = 0;
-                    visualizer.setAngle(angle);
+                    angleY = 0;
+                    angleX = 0;
+                    moveVector = new Vertex(0,0,0);
+                    visualizer.setAngleY(angleY);
+                    visualizer.setAngleX(angleX);
+                    visualizer.setMoveVector(moveVector);
                 }
                 if (event.getCode() == KeyCode.T) {
                     scene.getMesh().triangulate();

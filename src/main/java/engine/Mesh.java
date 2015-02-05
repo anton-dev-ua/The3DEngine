@@ -23,7 +23,12 @@ public class Mesh {
     public Mesh(Vertex[] vertices, Face[] face) {
         originalVertices = Arrays.copyOf(vertices, vertices.length);
         originalFaces = Arrays.copyOf(face, face.length);
-        rotateY(0);
+
+        this.vertices = new ArrayList<>(originalVertices.length);
+        this.vertices.addAll(Arrays.asList(originalVertices));
+
+        this.faces = new ArrayList<>();
+        this.faces.addAll(Arrays.asList(originalFaces));
     }
 
     public Vertex[] getVertices() {
@@ -34,18 +39,33 @@ public class Mesh {
         return faces.toArray(new Face[faces.size()]);
     }
 
-    public void rotateY(double a) {
-        double ar = toRadians(a);
+    public void transform(Vertex moveVector, double rotateY, double rotateX) {
         vertices = new ArrayList<>(originalVertices.length);
+        vertices.addAll(Arrays.asList(originalVertices));
+        rotateX(rotateX);
+        rotateY(rotateY);
+        move(moveVector);
+    }
 
-        for (int i = 0; i < originalVertices.length; i++) {
+    private void rotateY(double a) {
+        double ar = toRadians(a);
 
-            Vertex vertex = originalVertices[i];
+        for (int i = 0; i < vertices.size(); i++) {
+            vertices.set(i, vertices.get(i).rotateY(ar));
+        }
+    }
 
-            double x = vertex.getX() * cos(ar) + vertex.getZ() * sin(ar);
-            double y = vertex.getY();
-            double z = -vertex.getX() * sin(ar) + vertex.getZ() * cos(ar);
-            vertices.add(new Vertex(x, y, z));
+    private void rotateX(double a) {
+        double ar = toRadians(a);
+
+        for (int i = 0; i < vertices.size(); i++) {
+            vertices.set(i, vertices.get(i).rotateX(ar));
+        }
+    }
+
+    private void move(Vertex moveVector) {
+        for (int i = 0; i < vertices.size(); i++) {
+            vertices.set(i, vertices.get(i).plus(moveVector));
         }
     }
 
@@ -249,6 +269,7 @@ public class Mesh {
     public static class Face {
         int vertexIndices[];
         public ColorRGB color = new ColorRGB(1, 1, 1);
+        private boolean opened;
 
         public Face(int... vertexIndices) {
             this.vertexIndices = vertexIndices;
@@ -256,6 +277,15 @@ public class Mesh {
 
         public int[] getVertexIndices() {
             return vertexIndices;
+        }
+
+        public Face opened() {
+            opened = true;
+            return this;
+        }
+
+        public boolean isOpened() {
+            return opened;
         }
     }
 

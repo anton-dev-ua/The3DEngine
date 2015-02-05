@@ -22,8 +22,10 @@ public class Visualizer {
 
     private boolean showVertexNumber;
     private boolean showArrows;
-    private double angle = 0;
+    private double angleY = 0;
     private double fps;
+    private Vertex moveVector = new Vertex(0,0,0);
+    private double angleX;
 
     public Visualizer(Scene scene, double xSize, double ySize, double fov) {
         this.scene = scene;
@@ -52,9 +54,30 @@ public class Visualizer {
         gc.clearRect(0, 0, xSize, ySize);
 
         Mesh mesh = scene.getMesh();
-        mesh.rotateY(angle);
         mesh.cutByCameraPyramid(-dist);
 
+        drawMesh(mesh);
+
+        Mesh cameraMesh = scene.getCamera().transform(moveVector, angleY, angleX).getMesh();
+        cameraMesh.cutByCameraPyramid(-dist);
+
+        drawMesh(cameraMesh);
+
+        frame++;
+
+        if ((spentTime = System.currentTimeMillis() - startTime) > 1000) {
+            fps = (double) (frame * 1000) / spentTime;
+            frame = 0;
+            startTime = System.currentTimeMillis();
+        }
+        gc.fillText(String.format("FPS: %,4.0f", fps), 10, 20);
+        gc.fillText(String.format("x angle: %s", angleX), 10, 35);
+        gc.fillText(String.format("y angle: %s", angleY), 10, 50);
+        gc.fillText(String.format("move: %s", moveVector), 10, 65);
+
+    }
+
+    private void drawMesh(Mesh mesh) {
         Vertex[] objVertices = mesh.getVertices();
         Vertex[] screenPoints = new Vertex[objVertices.length];
 
@@ -63,22 +86,10 @@ public class Visualizer {
             screenPoints[i] = toScreenPoint(objVertex);
         }
 
-//        gc.setStroke(Color.GRAY);
-//        for (Mesh.Triangle triangle : mesh.getTriangles()) {
-//            Vertex v1 = screenPoints[triangle.getI1()];
-//            Vertex v2 = screenPoints[triangle.getI2()];
-//            Vertex v3 = screenPoints[triangle.getI3()];
-//
-//            gc.strokeLine(v1.getX(), v1.getY(), v2.getX(), v2.getY());
-//            gc.strokeLine(v1.getX(), v1.getY(), v3.getX(), v3.getY());
-//            gc.strokeLine(v2.getX(), v2.getY(), v1.getX(), v1.getY());
-//
-//        }
-
         for (Mesh.Face face : mesh.getFaces()) {
             gc.setStroke(new Color(face.color.red, face.color.green, face.color.blue, 1));
             int[] pointIndices = face.getVertexIndices();
-            for (int i = 0; i < pointIndices.length; i++) {
+            for (int i = 0; i < pointIndices.length - (face.isOpened() ? 1 : 0); i++) {
 
                 int pointIndex = pointIndices[i];
                 int nextPointIndex = i < pointIndices.length - 1 ? pointIndices[i + 1] : pointIndices[0];
@@ -98,15 +109,6 @@ public class Visualizer {
                 }
             }
         }
-
-        frame++;
-
-        if ((spentTime = System.currentTimeMillis() - startTime) > 1000) {
-            fps = (double) (frame * 1000) / spentTime;
-            frame = 0;
-            startTime = System.currentTimeMillis();
-        }
-        gc.fillText(String.format("FPS: %,4.0f", fps), 10, 20);
     }
 
     double phi = toRadians(10);
@@ -155,7 +157,15 @@ public class Visualizer {
         this.showArrows = showArrows;
     }
 
-    public void setAngle(double angle) {
-        this.angle = angle;
+    public void setAngleY(double angleY) {
+        this.angleY = angleY;
+    }
+
+    public void setMoveVector(Vertex moveVector) {
+        this.moveVector = moveVector;
+    }
+
+    public void setAngleX(double angleX) {
+        this.angleX = angleX;
     }
 }
