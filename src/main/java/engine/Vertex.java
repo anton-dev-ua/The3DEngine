@@ -50,7 +50,7 @@ public class Vertex {
         this.behindCamera = behindCamera;
     }
 
-    public boolean isBehindCamera() {
+    public boolean isOutsideCameraPyramid() {
         return behindCamera;
     }
 
@@ -80,5 +80,9 @@ public class Vertex {
 
     public double dot(Vertex n) {
         return x * n.x + y * n.y + z * n.z;
+    }
+
+    public boolean isInsideCameraPyramid() {
+        return !isOutsideCameraPyramid();
     }
 }

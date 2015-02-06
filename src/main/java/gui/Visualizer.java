@@ -86,7 +86,9 @@ public class Visualizer {
 
         for (int i = 0; i < objVertices.length; i++) {
             Vertex objVertex = objVertices[i];
-            screenPoints[i] = toScreenPoint(objVertex);
+            if(objVertex.isInsideCameraPyramid()) {
+                screenPoints[i] = toScreenPoint(objVertex);
+            }
         }
 
         for (Mesh.Face face : mesh.getFaces()) {

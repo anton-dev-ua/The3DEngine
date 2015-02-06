@@ -50,7 +50,9 @@ public class Mesh {
         double ar = toRadians(a);
 
         for (int i = 0; i < vertices.size(); i++) {
-            vertices.set(i, vertices.get(i).rotateY(-ar));
+            if(vertices.get(i).isInsideCameraPyramid()) {
+                vertices.set(i, vertices.get(i).rotateY(-ar));
+            }
         }
     }
 
@@ -58,13 +60,17 @@ public class Mesh {
         double ar = toRadians(a);
 
         for (int i = 0; i < vertices.size(); i++) {
-            vertices.set(i, vertices.get(i).rotateX(-ar));
+            if(vertices.get(i).isInsideCameraPyramid()) {
+                vertices.set(i, vertices.get(i).rotateX(-ar));
+            }
         }
     }
 
     private void move(Vertex moveVector) {
         for (int i = 0; i < vertices.size(); i++) {
-            vertices.set(i, vertices.get(i).minus(moveVector));
+            if(vertices.get(i).isInsideCameraPyramid()) {
+                vertices.set(i, vertices.get(i).minus(moveVector));
+            }
         }
     }
 
@@ -124,7 +130,7 @@ public class Mesh {
         int transformMode = ADD_AS_IS;
         for (int j = 0; j < vertexIndices.length; j++) {
             Vertex v = vertices.get(vertexIndices[j]);
-            if (v.isBehindCamera()) {
+            if (v.isOutsideCameraPyramid()) {
                 if (j > 0 && transformMode == ADD_AS_IS) {
                     transformMode = CUT;
                     break;
@@ -148,11 +154,11 @@ public class Mesh {
                 Vertex v1 = vertices.get(vi1);
                 Vertex v2 = vertices.get(vi2);
 
-                if (!v1.isBehindCamera()) {
+                if (!v1.isOutsideCameraPyramid()) {
                     newVertexIndices.add(vi1);
                 }
 
-                if (v1.isBehindCamera() != v2.isBehindCamera()) {
+                if (v1.isOutsideCameraPyramid() != v2.isOutsideCameraPyramid()) {
                     double k = o.minus(v1).dot(n)/v2.minus(v1).dot(n);
                     Vertex v = v1.plus(v2.minus(v1).multiply(k));
 
@@ -177,7 +183,7 @@ public class Mesh {
         int transformMode = ADD_AS_IS;
         for (int j = 0; j < vertexIndices.length; j++) {
             Vertex v = vertices.get(vertexIndices[j]);
-            if (v.isBehindCamera()) {
+            if (v.isOutsideCameraPyramid()) {
                 if (j > 0 && transformMode == ADD_AS_IS) {
                     transformMode = CUT;
                     break;
@@ -201,11 +207,11 @@ public class Mesh {
                 Vertex v1 = vertices.get(vi1);
                 Vertex v2 = vertices.get(vi2);
 
-                if (!v1.isBehindCamera()) {
+                if (!v1.isOutsideCameraPyramid()) {
                     newVertexIndices.add(vi1);
                 }
 
-                if (v1.isBehindCamera() != v2.isBehindCamera()) {
+                if (v1.isOutsideCameraPyramid() != v2.isOutsideCameraPyramid()) {
                     double x = v1.getX() + (v2.getX() - v1.getX()) * (cutPlane - v1.getZ()) / (v2.getZ() - v1.getZ());
                     double y = v1.getY() + (v2.getY() - v1.getY()) * (cutPlane - v1.getZ()) / (v2.getZ() - v1.getZ());
 
