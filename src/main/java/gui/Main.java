@@ -6,13 +6,18 @@ import engine.Vertex;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.scene.Cursor;
+import javafx.scene.ImageCursor;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.util.concurrent.CountDownLatch;
 
 import static java.lang.Math.*;
@@ -28,45 +33,22 @@ public class Main extends Application {
     private boolean running = true;
     private Vertex moveVector = new Vertex(0, 0, 0);
     private double angleX;
+    private double sensitivity = 0.2;
+    private Robot robot;
+    private int mouseY;
+    private int mouseX;
+    private boolean mouseCaptured;
+    private double oldY;
+    private double oldX;
 
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-
+        robot = new Robot();
         scene = new engine.Scene();
-//        scene.setMesh(aCube()
-//                        .withEdgeLength(200)
-//                        .build()
-//        );
-
-//        scene.setMesh(aCameraPyramid().build());
-
         scene.setCamera(new Camera(width, height, fov));
 
-//        scene.setMesh(aTorus()
-//                        .withBigRadius(150)
-//                        .withSmallRadius(60)
-//                        .withApproximationNumber(10)
-//                        .build()
-//        );
-
-//        scene.setMesh(aLetterA().withHeight(300).build());
-//        scene.setMesh(aSimpleRoom().build());
-        scene.setMesh(new ColladaReader().readFile("/Users/anton/Documents/temp/room-with-corner-stand.dae"));
-
-//       scene.setMesh(
-//               new Mesh(
-//                       new Vertex[]{
-//                               new Vertex(100, 150, 0),
-//                               new Vertex(70, -50, 0),
-//                               new Vertex(-70, -50, 0),
-//                               new Vertex(-100, 150, 0),
-//                               new Vertex(0, 0, 0)},
-//                       new Mesh.Face[] {
-//                               new Mesh.Face(0,1,2,3,4)
-//                       }
-//               )
-//       );
+        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/room-with-corner-stand.dae").getFile()));
 
         visualizer = new Visualizer(scene, width, height, fov);
 
@@ -120,7 +102,9 @@ public class Main extends Application {
                     visualizer.setAngleX(angleX);
 
                 }
-                if (event.getCode() == KeyCode.UP) {
+
+
+                if (event.getCode() == KeyCode.W) {
                     double step = 10;
                     double dz = step * cos(toRadians(angleY));
                     double dx = step * sin(toRadians(angleY));
@@ -128,7 +112,7 @@ public class Main extends Application {
                     visualizer.setMoveVector(moveVector);
 
                 }
-                if (event.getCode() == KeyCode.DOWN) {
+                if (event.getCode() == KeyCode.S) {
                     double step = -10;
                     double dz = step * cos(toRadians(angleY));
                     double dx = step * sin(toRadians(angleY));
@@ -136,11 +120,29 @@ public class Main extends Application {
                     visualizer.setMoveVector(moveVector);
 
                 }
-                if(event.getCode() == KeyCode.H) {
+                if (event.getCode() == KeyCode.A) {
+                    double step = -10;
+                    double dz = step * -sin(toRadians(angleY));
+                    double dx = step * cos(toRadians(angleY));
+                    moveVector = moveVector.plus(new Vertex(dx, 0, dz));
+                    visualizer.setMoveVector(moveVector);
+
+                }
+                if (event.getCode() == KeyCode.D) {
+                    double step = 10;
+                    double dz = step * -sin(toRadians(angleY));
+                    double dx = step * cos(toRadians(angleY));
+                    moveVector = moveVector.plus(new Vertex(dx, 0, dz));
+                    visualizer.setMoveVector(moveVector);
+
+                }
+
+
+                if (event.getCode() == KeyCode.H) {
                     moveVector = moveVector.plus(new Vertex(0, 5, 0));
                     visualizer.setMoveVector(moveVector);
                 }
-                if(event.getCode() == KeyCode.N) {
+                if (event.getCode() == KeyCode.N) {
                     moveVector = moveVector.plus(new Vertex(0, -5, 0));
                     visualizer.setMoveVector(moveVector);
                 }
@@ -148,7 +150,7 @@ public class Main extends Application {
                     scene.getMesh().reset();
                     angleY = 0;
                     angleX = 0;
-                    moveVector = new Vertex(0,0,0);
+                    moveVector = new Vertex(0, 0, 0);
                     visualizer.setAngleY(angleY);
                     visualizer.setAngleX(angleX);
                     visualizer.setMoveVector(moveVector);
@@ -159,7 +161,7 @@ public class Main extends Application {
                 if (event.getCode() == KeyCode.V) {
                     visualizer.setShowVertexNumber(!visualizer.isShowVertexNumber());
                 }
-                if (event.getCode() == KeyCode.A) {
+                if (event.getCode() == KeyCode.F) {
                     visualizer.setShowArrows(!visualizer.isShowArrows());
                 }
 
@@ -167,6 +169,40 @@ public class Main extends Application {
                 if (event.getCode() == KeyCode.Q) {
                     running = false;
                     primaryStage.close();
+                }
+            }
+        });
+
+        primaryStage.getScene().setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (!mouseCaptured) {
+                    mouseY = (int) event.getScreenY();
+                    mouseX = (int) event.getScreenX();
+                    oldX = event.getScreenX();
+                    oldY = event.getScreenY();
+                    primaryStage.getScene().setCursor(new ImageCursor(new Image("empty_cursor.png")));
+                    mouseCaptured = true;
+                } else {
+                    primaryStage.getScene().setCursor(Cursor.DEFAULT);
+                    mouseCaptured = false;
+                }
+
+            }
+        });
+        primaryStage.getScene().setOnMouseMoved(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (mouseCaptured) {
+                    double newX = event.getScreenX();
+                    double newY = event.getScreenY();
+                    double deltaX = newX - oldX;
+                    double deltaY = newY - oldY;
+                    angleY += deltaX * sensitivity;
+                    angleX += deltaY * sensitivity;
+                    visualizer.setAngleY(angleY);
+                    visualizer.setAngleX(angleX);
+                    robot.mouseMove(mouseX, mouseY);
                 }
             }
         });
