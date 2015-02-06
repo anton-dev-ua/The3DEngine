@@ -12,6 +12,12 @@ public class Vertex {
         this.z = z;
     }
 
+    public Vertex(Vertex vertex) {
+        x = vertex.x;
+        y = vertex.y;
+        z = vertex.z;
+    }
+
     public Vertex multiply(double a) {
         return new Vertex(x * a, y * a, z * a);
     }
@@ -70,10 +76,9 @@ public class Vertex {
     @Override
     public String toString() {
         return String.format("[%,7.2f,%,7.2f,%,7.2f]", x, y, z);
-//        "Vertex{" +
-//                "x=" + x +
-//                ", y=" + y +
-//                ", z=" + z +
-//                '}';
+    }
+
+    public double dot(Vertex n) {
+        return x * n.x + y * n.y + z * n.z;
     }
 }

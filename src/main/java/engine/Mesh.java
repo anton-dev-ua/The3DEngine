@@ -89,6 +89,90 @@ public class Mesh {
 
     }
 
+    public void cutByCameraPyramid(Camera camera) {
+        Vertex[] cutPlanes = camera.getCutPlanes();
+
+        faces = new ArrayList<>();
+        faces.addAll(Arrays.asList(originalFaces));
+        vertices = new ArrayList<>(originalVertices.length);
+        for (Vertex vertex : originalVertices) {
+            vertices.add(new Vertex(vertex));
+        }
+
+        for(int i=0; i<cutPlanes.length; i+=2) {
+            cutByPlane(cutPlanes[i], cutPlanes[i + 1]);
+        }
+    }
+
+    private void cutByPlane(Vertex n, Vertex o) {
+
+        for (Vertex vertex : vertices) {
+            if (vertex.minus(o).dot(n) < 0) {
+                vertex.setBehindCamera(true);
+            }
+        }
+
+        List<Face> tempFaces = new ArrayList<>();
+        tempFaces.addAll(faces);
+        faces = new ArrayList<>();
+        for (Face face : tempFaces) {
+            cutFace(n, o, face);
+        }
+    }
+
+    private void cutFace(Vertex n, Vertex o, Face face) {
+        int[] vertexIndices = face.getVertexIndices();
+        int transformMode = ADD_AS_IS;
+        for (int j = 0; j < vertexIndices.length; j++) {
+            Vertex v = vertices.get(vertexIndices[j]);
+            if (v.isBehindCamera()) {
+                if (j > 0 && transformMode == ADD_AS_IS) {
+                    transformMode = CUT;
+                    break;
+                } else {
+                    transformMode = REMOVE;
+                }
+            } else if (transformMode == REMOVE) {
+                transformMode = CUT;
+                break;
+            }
+        }
+
+        if (ADD_AS_IS == transformMode) {
+            faces.add(face);
+        } else if (CUT == transformMode) {
+
+            List<Integer> newVertexIndices = new ArrayList<>(20);
+            for (int j = 0; j < vertexIndices.length; j++) {
+                int vi1 = vertexIndices[j];
+                int vi2 = vertexIndices[j < vertexIndices.length - 1 ? j + 1 : 0];
+                Vertex v1 = vertices.get(vi1);
+                Vertex v2 = vertices.get(vi2);
+
+                if (!v1.isBehindCamera()) {
+                    newVertexIndices.add(vi1);
+                }
+
+                if (v1.isBehindCamera() != v2.isBehindCamera()) {
+                    double k = o.minus(v1).dot(n)/v2.minus(v1).dot(n);
+                    Vertex v = v1.plus(v2.minus(v1).multiply(k));
+
+                    vertices.add(v);
+
+                    newVertexIndices.add(vertices.size() - 1);
+                }
+
+            }
+
+            int[] newVertexIndicesForFace = new int[newVertexIndices.size()];
+            for (int t = 0; t < newVertexIndices.size(); t++) newVertexIndicesForFace[t] = newVertexIndices.get(t);
+
+            Face newFace = new Face(newVertexIndicesForFace);
+            newFace.color = face.color;
+            faces.add(newFace);
+        }
+    }
+
     private void cutFace(double cutPlane, Face face) {
         int[] vertexIndices = face.getVertexIndices();
         int transformMode = ADD_AS_IS;

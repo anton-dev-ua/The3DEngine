@@ -1,5 +1,6 @@
 package gui;
 
+import engine.Camera;
 import engine.Mesh;
 import engine.Scene;
 import engine.Vertex;
@@ -54,11 +55,12 @@ public class Visualizer {
         gc.clearRect(0, 0, xSize, ySize);
 
         Mesh mesh = scene.getMesh();
-        mesh.cutByCameraPyramid(-dist);
+        Camera camera = scene.getCamera().transform(moveVector, angleY, angleX);
+        mesh.cutByCameraPyramid(camera);
 
         drawMesh(mesh);
 
-        Mesh cameraMesh = scene.getCamera().transform(moveVector, angleY, angleX).getMesh();
+        Mesh cameraMesh = camera.getMesh();
         cameraMesh.cutByCameraPyramid(-dist);
 
         drawMesh(cameraMesh);
