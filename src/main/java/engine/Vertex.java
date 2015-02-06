@@ -63,8 +63,8 @@ public class Vertex {
 
     Vertex rotateX(double ar) {
         double nx = x;
-        double ny = y * cos(ar) + z * sin(ar);
-        double nz = -y * sin(ar) + z * cos(ar);
+        double ny = y * cos(ar) - z * sin(ar);
+        double nz = y * sin(ar) + z * cos(ar);
         return new Vertex(nx, ny, nz);
     }
 

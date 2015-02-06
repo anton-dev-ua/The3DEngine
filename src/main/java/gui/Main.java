@@ -22,11 +22,13 @@ public class Main extends Application {
     private Visualizer visualizer;
     private int width = 800;
     private int height = 600;
+    private double fov = 90;
     private engine.Scene scene;
     private double angleY = 0;
     private boolean running = true;
     private Vertex moveVector = new Vertex(0, 0, 0);
     private double angleX;
+
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -39,7 +41,7 @@ public class Main extends Application {
 
 //        scene.setMesh(aCameraPyramid().build());
 
-        scene.setCamera(new Camera(width, height, 90));
+        scene.setCamera(new Camera(width, height, fov));
 
 //        scene.setMesh(aTorus()
 //                        .withBigRadius(150)
@@ -66,7 +68,7 @@ public class Main extends Application {
 //               )
 //       );
 
-        visualizer = new Visualizer(scene, width, height, 90);
+        visualizer = new Visualizer(scene, width, height, fov);
 
         primaryStage.setTitle("3D Engine");
         primaryStage.setScene(new Scene(visualizer.createScenePane(), width, height, Color.BLACK));
@@ -110,11 +112,11 @@ public class Main extends Application {
 
                 }
                 if (event.getCode() == KeyCode.G) {
-                    angleX += 5;
+                    angleX -= 5;
                     visualizer.setAngleX(angleX);
                 }
                 if (event.getCode() == KeyCode.B) {
-                    angleX -= 5;
+                    angleX += 5;
                     visualizer.setAngleX(angleX);
 
                 }

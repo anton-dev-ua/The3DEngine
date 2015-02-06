@@ -39,19 +39,18 @@ public class Mesh {
         return faces.toArray(new Face[faces.size()]);
     }
 
-    public void transform(Vertex moveVector, double rotateY, double rotateX) {
-        vertices = new ArrayList<>(originalVertices.length);
-        vertices.addAll(Arrays.asList(originalVertices));
-        rotateX(rotateX);
+    public void alignWithCamera(Vertex cameraPosition, Vertex moveVector, double rotateY, double rotateX) {
+        move(cameraPosition);
         rotateY(rotateY);
-        move(moveVector);
+        rotateX(rotateX);
+        move(moveVector.minus(cameraPosition));
     }
 
     private void rotateY(double a) {
         double ar = toRadians(a);
 
         for (int i = 0; i < vertices.size(); i++) {
-            vertices.set(i, vertices.get(i).rotateY(ar));
+            vertices.set(i, vertices.get(i).rotateY(-ar));
         }
     }
 
@@ -59,13 +58,13 @@ public class Mesh {
         double ar = toRadians(a);
 
         for (int i = 0; i < vertices.size(); i++) {
-            vertices.set(i, vertices.get(i).rotateX(ar));
+            vertices.set(i, vertices.get(i).rotateX(-ar));
         }
     }
 
     private void move(Vertex moveVector) {
         for (int i = 0; i < vertices.size(); i++) {
-            vertices.set(i, vertices.get(i).plus(moveVector));
+            vertices.set(i, vertices.get(i).minus(moveVector));
         }
     }
 
@@ -228,6 +227,7 @@ public class Mesh {
 
     public void reset() {
         this.vertices = new ArrayList<>(Arrays.asList(originalVertices));
+        this.faces = new ArrayList<>(Arrays.asList(originalFaces));
         triangles = new Triangle[0];
     }
 

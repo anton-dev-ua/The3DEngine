@@ -129,4 +129,8 @@ public class Camera {
         s = s.plus(moveVector);
         backO = backO.plus(moveVector);
     }
+
+    public Vertex getPosition() {
+        return s;
+    }
 }

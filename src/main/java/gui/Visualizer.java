@@ -56,14 +56,15 @@ public class Visualizer {
 
         Mesh mesh = scene.getMesh();
         Camera camera = scene.getCamera().transform(moveVector, angleY, angleX);
+        mesh.reset();
         mesh.cutByCameraPyramid(camera);
-
+        mesh.alignWithCamera(camera.getPosition(), moveVector, angleY, angleX);
         drawMesh(mesh);
 
-        Mesh cameraMesh = camera.getMesh();
-        cameraMesh.cutByCameraPyramid(-dist);
-
-        drawMesh(cameraMesh);
+//        Mesh cameraMesh = camera.getMesh();
+//        cameraMesh.transform(new Vertex(0,0,0), camera.getPosition().plus(new Vertex(0,0,dist)), 0,0);
+//        cameraMesh.cutByCameraPyramid(-dist);
+//        drawMesh(cameraMesh);
 
         frame++;
 
