@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static engine.Mesh.Face;
+import static java.lang.Math.random;
 import static java.lang.String.format;
 
 public class ColladaReader {
@@ -23,7 +24,7 @@ public class ColladaReader {
     public static final String FACES_VERTEX_COUNT_LINE = "//mesh/polylist/vcount/text()";
     public static final String FACES_VERTICES_LINE = "//mesh/polylist/p/text()";
     private XPath xPath;
-    private static double SCALE = 200.0/78.7401575;
+    private static double SCALE = 200.0 / 78.7401575;
 
     public Mesh readFile(String fileName) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
         DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -78,6 +79,11 @@ public class ColladaReader {
                 position++;
             }
             faces[faceIndex] = new Face(vertexIndices);
+            byte r = (byte) (50 + random()*150);// * faceIndex / facesVerticesCount.length);
+            byte g = (byte) (50 + random()*150);// * faceIndex / facesVerticesCount.length);
+            byte b = (byte) (50 + random()*150);// * faceIndex / facesVerticesCount.length);
+            faces[faceIndex].color = new ColorRGB(r, g, b);
+
             faceIndex++;
         }
 

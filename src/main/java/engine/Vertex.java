@@ -42,7 +42,7 @@ public class Vertex {
         return new Vertex(x - v.x, y - v.y, z - v.z);
     }
 
-    public Vertex multiply(Vertex v) {
+    public Vertex cross(Vertex v) {
         return new Vertex(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
     }
 
@@ -68,7 +68,7 @@ public class Vertex {
         return new Vertex(nx, ny, nz);
     }
 
-    public Vertex norm() {
+    public Vertex normalize() {
         double l = sqrt(x * x + y * y + z * z);
         return new Vertex(x / l, y / l, z / l);
     }

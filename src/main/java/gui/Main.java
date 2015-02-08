@@ -48,7 +48,9 @@ public class Main extends Application {
         scene = new engine.Scene();
         scene.setCamera(new Camera(width, height, fov));
 
+//        scene.setMesh(aCube().withEdgeLength(200).build());
         scene.setMesh(new ColladaReader().readFile(getClass().getResource("/room-with-corner-stand.dae").getFile()));
+//        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms.dae").getFile()));
 
         visualizer = new Visualizer(scene, width, height, fov);
 
@@ -68,7 +70,7 @@ public class Main extends Application {
 
     private void startDrawingThread() {
         new Thread(() -> {
-            long fps = 60;
+            long fps = 1000000;
             long redrawSync = 1000000000 / fps;
             long lastTime = 0;
             while (running) {
@@ -163,6 +165,10 @@ public class Main extends Application {
                 }
                 if (event.getCode() == KeyCode.F) {
                     visualizer.setShowArrows(!visualizer.isShowArrows());
+                }
+
+                if (event.getCode() == KeyCode.L) {
+                    visualizer.setDrawWire(!visualizer.isDrawWire());
                 }
 
 

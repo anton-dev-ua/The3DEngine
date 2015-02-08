@@ -32,12 +32,12 @@ public class CubeBuilder extends MeshBuilder {
                 ),
 
                 faces(
-                        face(0, 1, 2, 3),
-                        face(7, 6, 5, 4),
-                        face(4, 0, 3, 7),
-                        face(0, 4, 5, 1),
-                        face(1, 5, 6, 2),
-                        face(3, 2, 6, 7)
+                        face(3,2,1,0),
+                        face(4,5,6,7),
+                        face(7,3,0,4),
+                        face(1,5,4,0),
+                        face(2,6,5,1),
+                        face(7,6,2,3)
                 )
         );
     }

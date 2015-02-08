@@ -29,6 +29,8 @@ public class Mesh {
 
         this.faces = new ArrayList<>();
         this.faces.addAll(Arrays.asList(originalFaces));
+
+        calculateNormals();
     }
 
     public Vertex[] getVertices() {
@@ -50,7 +52,7 @@ public class Mesh {
         double ar = toRadians(a);
 
         for (int i = 0; i < vertices.size(); i++) {
-            if(vertices.get(i).isInsideCameraPyramid()) {
+            if (vertices.get(i).isInsideCameraPyramid()) {
                 vertices.set(i, vertices.get(i).rotateY(-ar));
             }
         }
@@ -60,7 +62,7 @@ public class Mesh {
         double ar = toRadians(a);
 
         for (int i = 0; i < vertices.size(); i++) {
-            if(vertices.get(i).isInsideCameraPyramid()) {
+            if (vertices.get(i).isInsideCameraPyramid()) {
                 vertices.set(i, vertices.get(i).rotateX(-ar));
             }
         }
@@ -68,9 +70,49 @@ public class Mesh {
 
     private void move(Vertex moveVector) {
         for (int i = 0; i < vertices.size(); i++) {
-            if(vertices.get(i).isInsideCameraPyramid()) {
+            if (vertices.get(i).isInsideCameraPyramid()) {
                 vertices.set(i, vertices.get(i).minus(moveVector));
             }
+        }
+    }
+
+
+    public void calculateNormals() {
+        int fi = 0;
+        for (Face face : originalFaces) {
+            Vertex[] projXYPoints = getProjection(face, vertex -> new Vertex(vertex.getX(), vertex.getY(), 0));
+            Vertex[] projXZPoints = getProjection(face, vertex -> new Vertex(vertex.getX(), vertex.getZ(), 0));
+            Vertex[] projYZPoints = getProjection(face, vertex -> new Vertex(vertex.getY(), vertex.getZ(), 0));
+
+            double xyProjectionArea = abs(IntStream.range(0, projXYPoints.length).mapToDouble(i -> projXYPoints[i].cross(projXYPoints[i < projXYPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
+            double xzProjectionArea = abs(IntStream.range(0, projXZPoints.length).mapToDouble(i -> projXZPoints[i].cross(projXZPoints[i < projXZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
+            double yzProjectionArea = abs(IntStream.range(0, projYZPoints.length).mapToDouble(i -> projYZPoints[i].cross(projYZPoints[i < projYZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
+
+            Vertex[] projPoints;
+            if (xyProjectionArea > xzProjectionArea && xyProjectionArea > yzProjectionArea) {
+                projPoints = projXYPoints;
+            } else if (xzProjectionArea > xyProjectionArea && xzProjectionArea > yzProjectionArea) {
+                projPoints = projXZPoints;
+            } else {
+                projPoints = projYZPoints;
+            }
+            int minPointIndex = IntStream.range(0, projPoints.length).mapToObj(i -> pair(i, projPoints[i].getX())).min((p1, p2) -> p1.v < p2.v ? -1 : 1).get().i;
+
+            int nextPointIndex = minPointIndex < projPoints.length - 1 ? minPointIndex + 1 : 0;
+            int prevPointIndex = minPointIndex > 0 ? minPointIndex - 1 : projPoints.length - 1;
+
+            Vertex v3 = originalVertices[face.getVertexIndices()[nextPointIndex]];
+            Vertex v2 = originalVertices[face.getVertexIndices()[minPointIndex]];
+            Vertex v1 = originalVertices[face.getVertexIndices()[prevPointIndex]];
+            Vertex a = v3.minus(v2);
+            Vertex b = v1.minus(v2);
+
+//            System.out.println(v1+", "+v2 + ", " + v3);
+//            System.out.println(a+", "+b);
+            Vertex normal = a.cross(b).normalize();
+//            Vertex ss = new Vertex(0, 0, -400);
+//            System.out.println((fi++) + ": " + normal + ", " + ss.minus(v1).dot(normal));
+            face.setNormal(normal);
         }
     }
 
@@ -98,13 +140,17 @@ public class Mesh {
         Vertex[] cutPlanes = camera.getCutPlanes();
 
         faces = new ArrayList<>();
-        faces.addAll(Arrays.asList(originalFaces));
+        for (Face face : originalFaces) {
+            if (originalVertices[face.getVertexIndices()[0]].minus(camera.getPosition()).dot(face.getNormal()) > 0) {
+                faces.add(face);
+            }
+        }
         vertices = new ArrayList<>(originalVertices.length);
         for (Vertex vertex : originalVertices) {
             vertices.add(new Vertex(vertex));
         }
 
-        for(int i=0; i<cutPlanes.length; i+=2) {
+        for (int i = 0; i < cutPlanes.length; i += 2) {
             cutByPlane(cutPlanes[i], cutPlanes[i + 1]);
         }
     }
@@ -159,7 +205,7 @@ public class Mesh {
                 }
 
                 if (v1.isOutsideCameraPyramid() != v2.isOutsideCameraPyramid()) {
-                    double k = o.minus(v1).dot(n)/v2.minus(v1).dot(n);
+                    double k = o.minus(v1).dot(n) / v2.minus(v1).dot(n);
                     Vertex v = v1.plus(v2.minus(v1).multiply(k));
 
                     vertices.add(v);
@@ -253,9 +299,9 @@ public class Mesh {
             Vertex[] projXZPoints = getProjection(face, vertex -> new Vertex(vertex.getX(), vertex.getZ(), 0));
             Vertex[] projYZPoints = getProjection(face, vertex -> new Vertex(vertex.getY(), vertex.getZ(), 0));
 
-            double xyProjectionArea = abs(IntStream.range(0, projXYPoints.length).mapToDouble(i -> projXYPoints[i].multiply(projXYPoints[i < projXYPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
-            double xzProjectionArea = abs(IntStream.range(0, projXZPoints.length).mapToDouble(i -> projXZPoints[i].multiply(projXZPoints[i < projXZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
-            double yzProjectionArea = abs(IntStream.range(0, projYZPoints.length).mapToDouble(i -> projYZPoints[i].multiply(projYZPoints[i < projYZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
+            double xyProjectionArea = abs(IntStream.range(0, projXYPoints.length).mapToDouble(i -> projXYPoints[i].cross(projXYPoints[i < projXYPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
+            double xzProjectionArea = abs(IntStream.range(0, projXZPoints.length).mapToDouble(i -> projXZPoints[i].cross(projXZPoints[i < projXZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
+            double yzProjectionArea = abs(IntStream.range(0, projYZPoints.length).mapToDouble(i -> projYZPoints[i].cross(projYZPoints[i < projYZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
 
             Vertex[] projPoints;
             if (xyProjectionArea > xzProjectionArea && xyProjectionArea > yzProjectionArea) {
@@ -275,7 +321,7 @@ public class Mesh {
                 Vertex a = projPoints[nextPointIndex].minus(projPoints[minPointIndex]);
                 Vertex b = projPoints[prevPointIndex].minus(projPoints[minPointIndex]);
 
-                sign = signum(a.multiply(b).getZ());
+                sign = signum(a.cross(b).getZ());
             }
 
             List<Integer> pointIndices = IntStream.range(0, projPoints.length).mapToObj(Integer::valueOf).collect(Collectors.toList());
@@ -296,7 +342,7 @@ public class Mesh {
                 Vertex b = p1.minus(p2);
 
                 boolean found = true;
-                if (signum(a.multiply(b).getZ()) == sign) {
+                if (signum(a.cross(b).getZ()) == sign) {
                     TriangleHelper triangleHelper = new TriangleHelper(p1, p2, p3);
                     for (int pi : pointIndices) {
                         if (face.vertexIndices[i1] == face.vertexIndices[pi] ||
@@ -341,6 +387,16 @@ public class Mesh {
         return triangles;
     }
 
+    public int getVisibleVerticesCount() {
+        int count = 0;
+        for (Vertex v : vertices) {
+            if (v.isInsideCameraPyramid()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     static class Pair {
         private int i;
         private double v;
@@ -358,8 +414,9 @@ public class Mesh {
 
     public static class Face {
         int vertexIndices[];
-        public ColorRGB color = new ColorRGB(1, 1, 1);
+        public ColorRGB color = new ColorRGB((byte)255, (byte)255, (byte)255);
         private boolean opened;
+        private Vertex normal;
 
         public Face(int... vertexIndices) {
             this.vertexIndices = vertexIndices;
@@ -376,6 +433,14 @@ public class Mesh {
 
         public boolean isOpened() {
             return opened;
+        }
+
+        public void setNormal(Vertex normal) {
+            this.normal = normal;
+        }
+
+        public Vertex getNormal() {
+            return normal;
         }
     }
 
@@ -402,7 +467,7 @@ public class Mesh {
 
         public Face getFace() {
             Face face = new Face(i1, i2, i3);
-            face.color = new ColorRGB(.5, .5, .5);
+            face.color = new ColorRGB((byte)127, (byte)127, (byte)127);
             return face;
         }
     }
