@@ -29,10 +29,10 @@ public class Main extends Application {
     private int height = 600;
     private double fov = 90;
     private engine.Scene scene;
+    private Vertex position = new Vertex(0, 0, 0);
+    private double angleX;
     private double angleY = 0;
     private boolean running = true;
-    private Vertex moveVector = new Vertex(0, 0, 0);
-    private double angleX;
     private double sensitivity = 0.2;
     private Robot robot;
     private int mouseY;
@@ -40,6 +40,7 @@ public class Main extends Application {
     private boolean mouseCaptured;
     private double oldY;
     private double oldX;
+    private long fps = 60;
 
 
     @Override
@@ -49,10 +50,13 @@ public class Main extends Application {
         scene.setCamera(new Camera(width, height, fov));
 
 //        scene.setMesh(aCube().withEdgeLength(200).build());
-        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/room-with-corner-stand.dae").getFile()));
-//        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms.dae").getFile()));
+//        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/room-with-corner-stand.dae").getFile()));
+        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms.dae").getFile()));
 
         visualizer = new Visualizer(scene, width, height, fov);
+        visualizer.setAngleX((int) angleX);
+        visualizer.setAngleY((int) angleY);
+        visualizer.setPosition(position);
 
         primaryStage.setTitle("3D Engine");
         primaryStage.setScene(new Scene(visualizer.createScenePane(), width, height, Color.BLACK));
@@ -70,13 +74,12 @@ public class Main extends Application {
 
     private void startDrawingThread() {
         new Thread(() -> {
-            long fps = 100;
             long redrawSync = 1000000000 / fps;
             long lastTime = 0;
             while (running) {
                 if (System.nanoTime() - lastTime > redrawSync) {
                     lastTime = System.nanoTime();
-                    waitForDisplaying(() -> visualizer.drawScene());
+                    waitForDisplaying(visualizer::drawScene);
                 }
                 Thread.yield();
             }
@@ -111,52 +114,52 @@ public class Main extends Application {
                     double step = 10;
                     double dz = step * cos(toRadians(angleY));
                     double dx = step * sin(toRadians(angleY));
-                    moveVector = moveVector.plus(new Vertex(dx, 0, dz));
-                    visualizer.setMoveVector(moveVector);
+                    position = position.plus(new Vertex(dx, 0, dz));
+                    visualizer.setPosition(position);
 
                 }
                 if (event.getCode() == KeyCode.S) {
                     double step = -10;
                     double dz = step * cos(toRadians(angleY));
                     double dx = step * sin(toRadians(angleY));
-                    moveVector = moveVector.plus(new Vertex(dx, 0, dz));
-                    visualizer.setMoveVector(moveVector);
+                    position = position.plus(new Vertex(dx, 0, dz));
+                    visualizer.setPosition(position);
 
                 }
                 if (event.getCode() == KeyCode.A) {
                     double step = -10;
                     double dz = step * -sin(toRadians(angleY));
                     double dx = step * cos(toRadians(angleY));
-                    moveVector = moveVector.plus(new Vertex(dx, 0, dz));
-                    visualizer.setMoveVector(moveVector);
+                    position = position.plus(new Vertex(dx, 0, dz));
+                    visualizer.setPosition(position);
 
                 }
                 if (event.getCode() == KeyCode.D) {
                     double step = 10;
                     double dz = step * -sin(toRadians(angleY));
                     double dx = step * cos(toRadians(angleY));
-                    moveVector = moveVector.plus(new Vertex(dx, 0, dz));
-                    visualizer.setMoveVector(moveVector);
+                    position = position.plus(new Vertex(dx, 0, dz));
+                    visualizer.setPosition(position);
 
                 }
 
 
                 if (event.getCode() == KeyCode.H) {
-                    moveVector = moveVector.plus(new Vertex(0, 5, 0));
-                    visualizer.setMoveVector(moveVector);
+                    position = position.plus(new Vertex(0, 5, 0));
+                    visualizer.setPosition(position);
                 }
                 if (event.getCode() == KeyCode.N) {
-                    moveVector = moveVector.plus(new Vertex(0, -5, 0));
-                    visualizer.setMoveVector(moveVector);
+                    position = position.plus(new Vertex(0, -5, 0));
+                    visualizer.setPosition(position);
                 }
                 if (event.getCode() == KeyCode.O) {
                     scene.getMesh().reset();
                     angleY = 0;
                     angleX = 0;
-                    moveVector = new Vertex(0, 0, 0);
+                    position = new Vertex(0, 0, 0);
                     visualizer.setAngleY(angleY);
                     visualizer.setAngleX(angleX);
-                    visualizer.setMoveVector(moveVector);
+                    visualizer.setPosition(position);
                 }
                 if (event.getCode() == KeyCode.T) {
                     scene.getMesh().triangulate();
@@ -172,6 +175,14 @@ public class Main extends Application {
                     visualizer.setDrawWire(!visualizer.isDrawWire());
                 }
 
+
+                if (event.getCode() == KeyCode.CLOSE_BRACKET) {
+                    visualizer.setShowOnlyFace(visualizer.getShowOnlyFace() + 1);
+                }
+
+                if (event.getCode() == KeyCode.OPEN_BRACKET) {
+                    visualizer.setShowOnlyFace(visualizer.getShowOnlyFace() - 1);
+                }
 
                 if (event.getCode() == KeyCode.Q) {
                     running = false;
