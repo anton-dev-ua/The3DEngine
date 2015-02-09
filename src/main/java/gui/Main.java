@@ -70,7 +70,7 @@ public class Main extends Application {
 
     private void startDrawingThread() {
         new Thread(() -> {
-            long fps = 1000000;
+            long fps = 100;
             long redrawSync = 1000000000 / fps;
             long lastTime = 0;
             while (running) {
@@ -78,6 +78,7 @@ public class Main extends Application {
                     lastTime = System.nanoTime();
                     waitForDisplaying(() -> visualizer.drawScene());
                 }
+                Thread.yield();
             }
         }).start();
     }
@@ -88,20 +89,20 @@ public class Main extends Application {
             public void handle(KeyEvent event) {
                 if (event.getCode() == KeyCode.LEFT) {
                     angleY -= 5;
-                    visualizer.setAngleY(angleY);
+                    visualizer.setAngleY((int) angleY);
                 }
                 if (event.getCode() == KeyCode.RIGHT) {
                     angleY += 5;
-                    visualizer.setAngleY(angleY);
+                    visualizer.setAngleY((int) angleY);
 
                 }
                 if (event.getCode() == KeyCode.G) {
                     angleX -= 5;
-                    visualizer.setAngleX(angleX);
+                    visualizer.setAngleX((int) angleX);
                 }
                 if (event.getCode() == KeyCode.B) {
                     angleX += 5;
-                    visualizer.setAngleX(angleX);
+                    visualizer.setAngleX((int) angleX);
 
                 }
 
@@ -206,8 +207,8 @@ public class Main extends Application {
                     double deltaY = newY - oldY;
                     angleY += deltaX * sensitivity;
                     angleX += deltaY * sensitivity;
-                    visualizer.setAngleY(angleY);
-                    visualizer.setAngleX(angleX);
+                    visualizer.setAngleY((int) angleY);
+                    visualizer.setAngleX((int) angleX);
                     robot.mouseMove(mouseX, mouseY);
                 }
             }

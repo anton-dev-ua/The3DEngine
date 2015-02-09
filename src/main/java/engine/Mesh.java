@@ -219,6 +219,7 @@ public class Mesh {
             for (int t = 0; t < newVertexIndices.size(); t++) newVertexIndicesForFace[t] = newVertexIndices.get(t);
 
             Face newFace = new Face(newVertexIndicesForFace);
+            newFace.index = faces.size() + 1;
             newFace.color = face.color;
             faces.add(newFace);
         }
@@ -417,6 +418,7 @@ public class Mesh {
         public ColorRGB color = new ColorRGB((byte)255, (byte)255, (byte)255);
         private boolean opened;
         private Vertex normal;
+        public int index;
 
         public Face(int... vertexIndices) {
             this.vertexIndices = vertexIndices;

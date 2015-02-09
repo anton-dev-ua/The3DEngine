@@ -98,6 +98,14 @@ public class Visualizer {
     }
 
     private void drawMesh(Mesh mesh) {
+        caclulateProjection(mesh);
+
+        drawFaces(mesh);
+
+        drawWire(mesh);
+    }
+
+    private void caclulateProjection(Mesh mesh) {
         Vertex[] objVertices = mesh.getVertices();
         screenPoints = new Vertex[objVertices.length];
 
@@ -107,14 +115,20 @@ public class Visualizer {
                 screenPoints[i] = toScreenPoint(objVertex);
             }
         }
+    }
 
+    private void drawFaces(Mesh mesh) {
         Arrays.fill(buffer, (byte) 0);
         for (Mesh.Face face : mesh.getFaces()) {
-            drawFace(face);
+//            if (face.index == 6)
+                drawFace(face);
+//            break;
         }
         pixelWriter.setPixels(0, 0, (int) xSize, (int) ySize, PixelFormat.getByteRgbInstance(), buffer, 0, rowSize);
+    }
 
-        if(drawWire) {
+    private void drawWire(Mesh mesh) {
+        if (drawWire) {
             for (Mesh.Face face : mesh.getFaces()) {
                 drawFaceStroke(face);
             }
@@ -136,32 +150,48 @@ public class Visualizer {
             Vertex v1 = screenPoints[v1i];
             Vertex v2 = screenPoints[v2i];
 
-            if (abs(v1.getY() - v2.getY()) < 1) continue;
+            if ((int)v1.getY() - (int)v2.getY() == 0) {
+                continue;
+            }
 
 
-            ScreenEdge edge = calcEdge(v1, v2);
+            ScreenEdge edge;// = calcEdge(v1, v2);
+            if (v1.getY() < v2.getY()) {
+                edge = new ScreenEdge(v1, v2, true);
+            } else {
+                edge = new ScreenEdge(v2, v1, false);
+            }
+            edge.face = face;
+
+//            System.out.println(edge);
+
             addToEdgeList(edgeList, edge);
             minY = min(minY, edge.y);
 
         }
 
+//        System.out.println("------------------------------------------------------------------------");
         List<ScreenEdge> activeEdges = new LinkedList<>();
         double xlist[] = new double[10];
         int y = minY;
         int yOffset = y * rowSize;
         do {
             if (edgeList[y] != null) activeEdges.addAll(edgeList[y].getAll());
-            int xsize = 0;
+            int xLength = 0;
             for (ScreenEdge edge : activeEdges) {
-                xlist[xsize++] = edge.nextX();
+                xlist[xLength++] = edge.nextX();
                 edge.dy--;
             }
-            Arrays.sort(xlist, 0, xsize);
+            Arrays.sort(xlist, 0, xLength);
 
-            for (int i = 0; i < xsize; i += 2) {
+//            System.out.println(activeEdges);
+            if (xLength % 2 != 0) {
+                System.out.println("xSize = " + xLength + ", " + activeEdges);
+            }
+            for (int i = 0; i < xLength; i += 2) {
                 int startX = (int) xlist[i] * 3;
                 int endX = (int) xlist[i + 1] * 3;
-                for (int x = startX; x <= endX; x += 3) {
+                for (int x = startX; x < endX; x += 3) {
                     buffer[yOffset + x + 0] = face.color.red;
                     buffer[yOffset + x + 1] = face.color.green;
                     buffer[yOffset + x + 2] = face.color.blue;
@@ -173,28 +203,16 @@ public class Visualizer {
             y++;
             yOffset += rowSize;
 
-        } while (activeEdges.size() > 0);
+        } while (y < 600 && (activeEdges.size() > 0 || edgeList[y] != null));
 
     }
 
     private ScreenEdge calcEdge(Vertex v1, Vertex v2) {
         ScreenEdge edge;
         if (v1.getY() < v2.getY()) {
-            edge = new ScreenEdge(
-                    (int) round(v1.getY()),
-                    v1.getX(),
-                    (int) round(v2.getY() - v1.getY()),
-                    (v2.getX() - v1.getX()) / (v2.getY() - v1.getY()),
-                    true
-            );
+            edge = new ScreenEdge(v1, v2, true);
         } else {
-            edge = new ScreenEdge(
-                    (int) round(v2.getY()),
-                    v2.getX(),
-                    (int) round(v1.getY() - v2.getY()),
-                    (v1.getX() - v2.getX()) / (v1.getY() - v2.getY()),
-                    false
-            );
+            edge = new ScreenEdge(v2, v1, false);
         }
         return edge;
     }
@@ -215,24 +233,47 @@ public class Visualizer {
     }
 
     public class ScreenEdge {
+        public static final double ERR = 0.0001;
+        private final Vertex v1;
+        private final Vertex v2;
         int y;
         double x0, x;
         int dy;
         double dx;
         boolean starting;
+        public Mesh.Face face;
 
-        public ScreenEdge(int y, double x0, int dy, double dx, boolean starting) {
-            this.y = y;
-            this.x0 = x0;
+        public ScreenEdge(Vertex v1, Vertex v2, boolean starting) {
+//            System.out.println(v1.getY() + " ->  " + v2.getY());
+            y = (int) (v1.getY());
+            x0 = v1.getX();
+            dy = (int) (v2.getY()) - (int) (v1.getY());
+            dx = (v2.getX() - v1.getX()) / (v2.getY() - v1.getY());
             x = x0 - dx;
-            this.dy = dy;
-            this.dx = dx;
             this.starting = starting;
+            this.v1 = v1;
+            this.v2 = v2;
         }
 
         public double nextX() {
             x += dx;
             return x;
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("{");
+            sb.append("y=").append(y);
+            sb.append(", dy=").append(dy);
+            sb.append(", v1=").append(v1);
+            sb.append(", v2=").append(v2);
+            sb.append(", starting=").append(starting);
+            sb.append(", x0=").append(x0);
+            sb.append(", x=").append(x);
+            sb.append(", dx=").append(dx);
+            sb.append(", face=").append(face.index);
+            sb.append('}');
+            return sb.toString();
         }
     }
 

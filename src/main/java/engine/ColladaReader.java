@@ -83,6 +83,8 @@ public class ColladaReader {
             byte g = (byte) (50 + random()*150);// * faceIndex / facesVerticesCount.length);
             byte b = (byte) (50 + random()*150);// * faceIndex / facesVerticesCount.length);
             faces[faceIndex].color = new ColorRGB(r, g, b);
+            faces[faceIndex].index = faceIndex;
+
 
             faceIndex++;
         }
