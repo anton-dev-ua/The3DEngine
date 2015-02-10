@@ -78,7 +78,6 @@ public class Mesh {
 
 
     public void calculateNormals() {
-        int fi = 0;
         for (Face face : originalFaces) {
             Vertex[] projXYPoints = getProjection(face, vertex -> new Vertex(vertex.getX(), vertex.getY(), 0));
             Vertex[] projXZPoints = getProjection(face, vertex -> new Vertex(vertex.getX(), vertex.getZ(), 0));
@@ -219,8 +218,9 @@ public class Mesh {
             for (int t = 0; t < newVertexIndices.size(); t++) newVertexIndicesForFace[t] = newVertexIndices.get(t);
 
             Face newFace = new Face(newVertexIndicesForFace);
-            newFace.index = faces.size() + 1;
             newFace.color = face.color;
+            newFace.normal = face.normal;
+            newFace.index = face.index;
             faces.add(newFace);
         }
     }
@@ -415,7 +415,7 @@ public class Mesh {
 
     public static class Face {
         int vertexIndices[];
-        public ColorRGB color = new ColorRGB((byte)255, (byte)255, (byte)255);
+        public ColorRGB color = new ColorRGB((byte) 255, (byte) 255, (byte) 255);
         private boolean opened;
         private Vertex normal;
         public int index;
@@ -469,7 +469,7 @@ public class Mesh {
 
         public Face getFace() {
             Face face = new Face(i1, i2, i3);
-            face.color = new ColorRGB((byte)127, (byte)127, (byte)127);
+            face.color = new ColorRGB((byte) 127, (byte) 127, (byte) 127);
             return face;
         }
     }

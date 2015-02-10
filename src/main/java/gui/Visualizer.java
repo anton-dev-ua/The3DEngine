@@ -40,7 +40,10 @@ public class Visualizer {
     private boolean drawWire;
 
     double zBuffer[];
-    private int showOnlyFace = -1;
+    private Set<Integer> showOnlyFace = new HashSet<>();
+    private boolean useZBuffer = true;
+    private double mouseSceneX;
+    private double mouseSceneY;
 
     public Visualizer(Scene scene, double xSize, double ySize, double fov) {
         this.scene = scene;
@@ -51,6 +54,9 @@ public class Visualizer {
         buffer = new byte[(int) xSize * (int) (ySize + 2) * 3];
         rowSize = (int) xSize * 3;
         zBuffer = new double[(int) xSize * (int) (ySize + 2)];
+
+//        showOnlyFace.add(7);
+//        showOnlyFace.add(18);
 
     }
 
@@ -99,6 +105,7 @@ public class Visualizer {
         gc.fillText(String.format("pos  : %s", moveVector), 10, 65);
         gc.fillText(String.format("verts: %s", mesh.getVisibleVerticesCount()), 10, 80);
         gc.fillText(String.format("faces: %s", mesh.getFaces().length), 10, 95);
+        gc.fillText(String.format("mouse: %,3.0f, %,3.0f", mouseSceneX, mouseSceneY), 10, 110);
 
     }
 
@@ -126,7 +133,7 @@ public class Visualizer {
         Arrays.fill(buffer, (byte) 0);
         Arrays.fill(zBuffer, 0);
         for (Mesh.Face face : mesh.getFaces()) {
-            if (showOnlyFace == ALL_FACES || face.index == showOnlyFace)
+            if (showOnlyFace.isEmpty() || showOnlyFace.contains(face.index))
                 drawFace(face);
 //            break;
         }
@@ -173,16 +180,22 @@ public class Visualizer {
 
         }
 
-        if(edgeList[minY] == null ) return;
+        if (edgeList[minY] == null) return;
         ScreenEdge edge1 = edgeList[minY].get(0);
         ScreenEdge edge2 = edgeList[minY].get(1);
 
-        int xLen = (int) edge2.x0 - (int) edge1.x0;
-        double wLen = edge2.w0 - edge1.w0;
-        if (xLen == 0) {
-            xLen = (int) (edge2.x0 + edge2.dx * 10) - (int) (edge1.x0 + edge1.dx * 10);
-            wLen = (edge2.w0 + edge2.dw * 10) - (edge1.w0 + edge1.dw * 10);
-        }
+
+//        double xLen = edge2.x0 - edge1.x0;
+//        double wLen = edge2.w0 - edge1.w0;
+
+
+        double xLen = edge1.x0 + edge2.dy * edge1.dx - edge2.v2.getX();
+        double wLen = edge1.w0 + edge2.dy * edge1.dw - edge2.v2.getZ();
+
+//        if (xLen == 0) {
+//            xLen = (edge2.x0 + edge2.dx * 10) - (edge1.x0 + edge1.dx * 10);
+//            wLen = (edge2.w0 + edge2.dw * 10) - (edge1.w0 + edge1.dw * 10);
+//        }
 
         double dwx = wLen / xLen;
 //        if (!edge1.starting) dwx = -dwx;
@@ -224,10 +237,14 @@ public class Visualizer {
                 double w = activeEdges.get(i).w;
 //                System.out.println("w = " + w);
                 for (int x = startX; x < endX; x += 3) {
-                    if (w > zBuffer[zBufYOffset + zBuffX]) {
-                    buffer[yOffset + x + 0] = face.color.red;
-                    buffer[yOffset + x + 1] = face.color.green;
-                    buffer[yOffset + x + 2] = face.color.blue;
+//                    if (x / 3 == 380 && y == 340)// || x / 3 == 330 && y == 330)
+//                    {
+//                        System.out.printf("face: %3s; w = %-1.20f; zBuff = %-1.20s\n", face.index, w, zBuffer[zBufYOffset + zBuffX]);
+//                    }
+                    if (w > zBuffer[zBufYOffset + zBuffX] || !useZBuffer) {
+                        buffer[yOffset + x + 0] = face.color.red;
+                        buffer[yOffset + x + 1] = face.color.green;
+                        buffer[yOffset + x + 2] = face.color.blue;
 
                         zBuffer[zBufYOffset + zBuffX] = w;
                     }
@@ -273,11 +290,20 @@ public class Visualizer {
 
     public void setShowOnlyFace(int showOnlyFace) {
         System.out.println("show face: " + showOnlyFace);
-        this.showOnlyFace = showOnlyFace;
+        this.showOnlyFace.clear();
+        if (showOnlyFace >= 0) {
+            this.showOnlyFace.add(showOnlyFace);
+        }
     }
 
     public int getShowOnlyFace() {
-        return showOnlyFace;
+        return showOnlyFace.isEmpty() ? -1 : showOnlyFace.iterator().next();
+    }
+
+    public void setMousePositionInfo(double sceneX, double sceneY) {
+
+        this.mouseSceneX = sceneX;
+        this.mouseSceneY = sceneY;
     }
 
     public class ScreenEdge implements Comparable<ScreenEdge> {
@@ -298,8 +324,8 @@ public class Visualizer {
             x0 = v1.getX();
             dy = (int) (v2.getY()) - (int) (v1.getY());
             dx = (v2.getX() - v1.getX()) / (v2.getY() - v1.getY());
-            w0 = 1 / v1.getZ();
-            dw = (1 / v2.getZ() - w0) / (v2.getY() - v1.getY());
+            w0 = v1.getZ();
+            dw = (v2.getZ() - w0) / (v2.getY() - v1.getY());
             x = x0 - dx;
             w = w0 - dw;
             this.starting = starting;
@@ -389,7 +415,7 @@ public class Visualizer {
         return new Vertex(
                 xSize / 2 + vertex.getX() * dist / (vertex.getZ() + dist),
                 ySize / 2 - vertex.getY() * dist / (vertex.getZ() + dist),
-                vertex.getZ() + dist
+                1 / (vertex.getZ() + dist)
         );
     }
 
@@ -454,5 +480,13 @@ public class Visualizer {
             this.x = x;
             this.w = w;
         }
+    }
+
+    public boolean isUseZBuffer() {
+        return useZBuffer;
+    }
+
+    public void setUseZBuffer(boolean useZBuffer) {
+        this.useZBuffer = useZBuffer;
     }
 }

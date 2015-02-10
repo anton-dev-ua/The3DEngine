@@ -29,9 +29,30 @@ public class Main extends Application {
     private int height = 600;
     private double fov = 90;
     private engine.Scene scene;
-    private Vertex position = new Vertex(0, 0, 0);
-    private double angleX;
-    private double angleY = 0;
+
+
+    private PlayerPosition predefinedPositions[] = {
+            new PlayerPosition(new Vertex(0, 0, 0), 0, 0),
+            new PlayerPosition(new Vertex(-667, 0, 2120), 171, 8),
+            new PlayerPosition(new Vertex(-203.02, 0, 1247.92), -83, 21),
+            new PlayerPosition(new Vertex(-667, 0, 2120), 152.5, 12.6),
+            new PlayerPosition(new Vertex(37.17, 0, 330.50), 1.5, 7.2),
+            new PlayerPosition(new Vertex(-617.83, 0, 2232.50), 171.5, 50.6),
+    };
+    int predefinedPosIndex = 0;
+
+    private PlayerPosition pPosition = predefinedPositions[predefinedPosIndex];
+
+    //glitch 01
+//    private Vertex pPosition.position = ;
+//    private double pPosition.verticalAngle = 8;
+//    private double pPosition.horizontalAngle = 171;
+
+    //glitch 02
+//    private Vertex pPosition.position = new Vertex(-203.02, 0, 1247.92);
+//    private double pPosition.verticalAngle = 21;
+//    private double pPosition.horizontalAngle = -83;
+
     private boolean running = true;
     private double sensitivity = 0.2;
     private Robot robot;
@@ -40,7 +61,7 @@ public class Main extends Application {
     private boolean mouseCaptured;
     private double oldY;
     private double oldX;
-    private long fps = 60;
+    private long limitFps = 60;
 
 
     @Override
@@ -54,9 +75,9 @@ public class Main extends Application {
         scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms.dae").getFile()));
 
         visualizer = new Visualizer(scene, width, height, fov);
-        visualizer.setAngleX((int) angleX);
-        visualizer.setAngleY((int) angleY);
-        visualizer.setPosition(position);
+        visualizer.setAngleX((int) pPosition.verticalAngle);
+        visualizer.setAngleY((int) pPosition.horizontalAngle);
+        visualizer.setPosition(pPosition.position);
 
         primaryStage.setTitle("3D Engine");
         primaryStage.setScene(new Scene(visualizer.createScenePane(), width, height, Color.BLACK));
@@ -74,15 +95,15 @@ public class Main extends Application {
 
     private void startDrawingThread() {
         new Thread(() -> {
-            long redrawSync = 1000000000 / fps;
+            long redrawSync = 1000000000 / limitFps;
             long lastTime = 0;
             while (running) {
                 if (System.nanoTime() - lastTime > redrawSync) {
                     lastTime = System.nanoTime();
                     waitForDisplaying(visualizer::drawScene);
                 }
-                Thread.yield();
             }
+            System.out.println();
         }).start();
     }
 
@@ -91,75 +112,81 @@ public class Main extends Application {
             @Override
             public void handle(KeyEvent event) {
                 if (event.getCode() == KeyCode.LEFT) {
-                    angleY -= 5;
-                    visualizer.setAngleY((int) angleY);
+                    if (event.isShiftDown()) {
+                        pPosition.horizontalAngle -= 0.1;
+                    } else {
+                        pPosition.horizontalAngle -= 5;
+                    }
+                    visualizer.setAngleY((int) (pPosition.horizontalAngle * 10) / 10.0);
                 }
                 if (event.getCode() == KeyCode.RIGHT) {
-                    angleY += 5;
-                    visualizer.setAngleY((int) angleY);
+                    if (event.isShiftDown()) {
+                        pPosition.horizontalAngle += 0.1;
+                    } else {
+                        pPosition.horizontalAngle += 5;
+                    }
+                    visualizer.setAngleY((int) (pPosition.horizontalAngle * 10) / 10.0);
 
                 }
                 if (event.getCode() == KeyCode.G) {
-                    angleX -= 5;
-                    visualizer.setAngleX((int) angleX);
+                    pPosition.verticalAngle -= 5;
+                    visualizer.setAngleX((int) (pPosition.verticalAngle * 10) / 10.0);
                 }
                 if (event.getCode() == KeyCode.B) {
-                    angleX += 5;
-                    visualizer.setAngleX((int) angleX);
+                    pPosition.verticalAngle += 5;
+                    visualizer.setAngleX((int) (pPosition.verticalAngle * 10) / 10.0);
 
                 }
 
 
                 if (event.getCode() == KeyCode.W) {
                     double step = 10;
-                    double dz = step * cos(toRadians(angleY));
-                    double dx = step * sin(toRadians(angleY));
-                    position = position.plus(new Vertex(dx, 0, dz));
-                    visualizer.setPosition(position);
+                    double dz = step * cos(toRadians(pPosition.horizontalAngle));
+                    double dx = step * sin(toRadians(pPosition.horizontalAngle));
+                    pPosition.position = pPosition.position.plus(new Vertex(dx, 0, dz));
+                    visualizer.setPosition(pPosition.position);
 
                 }
                 if (event.getCode() == KeyCode.S) {
                     double step = -10;
-                    double dz = step * cos(toRadians(angleY));
-                    double dx = step * sin(toRadians(angleY));
-                    position = position.plus(new Vertex(dx, 0, dz));
-                    visualizer.setPosition(position);
+                    double dz = step * cos(toRadians(pPosition.horizontalAngle));
+                    double dx = step * sin(toRadians(pPosition.horizontalAngle));
+                    pPosition.position = pPosition.position.plus(new Vertex(dx, 0, dz));
+                    visualizer.setPosition(pPosition.position);
 
                 }
                 if (event.getCode() == KeyCode.A) {
                     double step = -10;
-                    double dz = step * -sin(toRadians(angleY));
-                    double dx = step * cos(toRadians(angleY));
-                    position = position.plus(new Vertex(dx, 0, dz));
-                    visualizer.setPosition(position);
+                    double dz = step * -sin(toRadians(pPosition.horizontalAngle));
+                    double dx = step * cos(toRadians(pPosition.horizontalAngle));
+                    pPosition.position = pPosition.position.plus(new Vertex(dx, 0, dz));
+                    visualizer.setPosition(pPosition.position);
 
                 }
                 if (event.getCode() == KeyCode.D) {
                     double step = 10;
-                    double dz = step * -sin(toRadians(angleY));
-                    double dx = step * cos(toRadians(angleY));
-                    position = position.plus(new Vertex(dx, 0, dz));
-                    visualizer.setPosition(position);
+                    double dz = step * -sin(toRadians(pPosition.horizontalAngle));
+                    double dx = step * cos(toRadians(pPosition.horizontalAngle));
+                    pPosition.position = pPosition.position.plus(new Vertex(dx, 0, dz));
+                    visualizer.setPosition(pPosition.position);
 
                 }
 
 
                 if (event.getCode() == KeyCode.H) {
-                    position = position.plus(new Vertex(0, 5, 0));
-                    visualizer.setPosition(position);
+                    pPosition.position = pPosition.position.plus(new Vertex(0, 5, 0));
+                    visualizer.setPosition(pPosition.position);
                 }
                 if (event.getCode() == KeyCode.N) {
-                    position = position.plus(new Vertex(0, -5, 0));
-                    visualizer.setPosition(position);
+                    pPosition.position = pPosition.position.plus(new Vertex(0, -5, 0));
+                    visualizer.setPosition(pPosition.position);
                 }
                 if (event.getCode() == KeyCode.O) {
                     scene.getMesh().reset();
-                    angleY = 0;
-                    angleX = 0;
-                    position = new Vertex(0, 0, 0);
-                    visualizer.setAngleY(angleY);
-                    visualizer.setAngleX(angleX);
-                    visualizer.setPosition(position);
+                    pPosition.horizontalAngle = 0;
+                    pPosition.verticalAngle = 0;
+                    pPosition.position = new Vertex(0, 0, 0);
+                    visualizePosition();
                 }
                 if (event.getCode() == KeyCode.T) {
                     scene.getMesh().triangulate();
@@ -173,6 +200,17 @@ public class Main extends Application {
 
                 if (event.getCode() == KeyCode.L) {
                     visualizer.setDrawWire(!visualizer.isDrawWire());
+                }
+                if (event.getCode() == KeyCode.Z) {
+                    visualizer.setUseZBuffer(!visualizer.isUseZBuffer());
+                }
+
+                if (event.getCode() == KeyCode.P) {
+                    predefinedPosIndex++;
+                    if (predefinedPosIndex >= predefinedPositions.length) predefinedPosIndex = 0;
+                    pPosition = predefinedPositions[predefinedPosIndex];
+                    System.out.printf("predefined position: %s\n", predefinedPosIndex);
+                    visualizePosition();
                 }
 
 
@@ -216,14 +254,23 @@ public class Main extends Application {
                     double newY = event.getScreenY();
                     double deltaX = newX - oldX;
                     double deltaY = newY - oldY;
-                    angleY += deltaX * sensitivity;
-                    angleX += deltaY * sensitivity;
-                    visualizer.setAngleY((int) angleY);
-                    visualizer.setAngleX((int) angleX);
+                    pPosition.horizontalAngle += deltaX * sensitivity;
+                    pPosition.verticalAngle += deltaY * sensitivity;
+                    visualizer.setAngleY((int) (pPosition.horizontalAngle * 10) / 10.0);
+                    visualizer.setAngleX((int) (pPosition.verticalAngle * 10) / 10.0);
                     robot.mouseMove(mouseX, mouseY);
                 }
+
+                visualizer.setMousePositionInfo(event.getSceneX(), event.getSceneY());
+
             }
         });
+    }
+
+    private void visualizePosition() {
+        visualizer.setAngleY(pPosition.horizontalAngle);
+        visualizer.setAngleX(pPosition.verticalAngle);
+        visualizer.setPosition(pPosition.position);
     }
 
     private void waitForDisplaying(Runnable operation) {
