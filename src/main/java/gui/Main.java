@@ -38,20 +38,19 @@ public class Main extends Application {
             new PlayerPosition(new Vertex(-667, 0, 2120), 152.5, 12.6),
             new PlayerPosition(new Vertex(37.17, 0, 330.50), 1.5, 7.2),
             new PlayerPosition(new Vertex(-617.83, 0, 2232.50), 171.5, 50.6),
+            new PlayerPosition(new Vertex(-630.25, 0, 2172.95), 158.1, 24.7),
+            new PlayerPosition(new Vertex(-32.43, 0, 1026.39), 5.2, 22.7),     //60
+            new PlayerPosition(new Vertex(-32.43, 0, 1026.39), 0, 37.1),
+            new PlayerPosition(new Vertex(-32.43, 0, 1026.39), 0.6, 37.3),
+            new PlayerPosition(new Vertex(-523.73, 0, 2463.28), -170.8, 4.8),
+            new PlayerPosition(new Vertex(-523.73, 0, 2463.28), -169.8, 10.1),
+            new PlayerPosition(new Vertex(-618.36, 0, 2167.32), -179.7, -2),
+            new PlayerPosition(new Vertex(-619.36, -120, 1977.32), -179.7, -2),
+            new PlayerPosition(new Vertex(-102.31, -120, 1486.87), -389.7, -12),
     };
     int predefinedPosIndex = 0;
 
     private PlayerPosition pPosition = predefinedPositions[predefinedPosIndex];
-
-    //glitch 01
-//    private Vertex pPosition.position = ;
-//    private double pPosition.verticalAngle = 8;
-//    private double pPosition.horizontalAngle = 171;
-
-    //glitch 02
-//    private Vertex pPosition.position = new Vertex(-203.02, 0, 1247.92);
-//    private double pPosition.verticalAngle = 21;
-//    private double pPosition.horizontalAngle = -83;
 
     private boolean running = true;
     private double sensitivity = 0.2;

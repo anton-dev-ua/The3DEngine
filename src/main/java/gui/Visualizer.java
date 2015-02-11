@@ -55,7 +55,7 @@ public class Visualizer {
         rowSize = (int) xSize * 3;
         zBuffer = new double[(int) xSize * (int) (ySize + 2)];
 
-//        showOnlyFace.add(7);
+//        showOnlyFace.add(0);
 //        showOnlyFace.add(18);
 
     }

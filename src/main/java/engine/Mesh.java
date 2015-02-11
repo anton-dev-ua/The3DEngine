@@ -103,14 +103,10 @@ public class Mesh {
             Vertex v3 = originalVertices[face.getVertexIndices()[nextPointIndex]];
             Vertex v2 = originalVertices[face.getVertexIndices()[minPointIndex]];
             Vertex v1 = originalVertices[face.getVertexIndices()[prevPointIndex]];
-            Vertex a = v3.minus(v2);
-            Vertex b = v1.minus(v2);
+            Vertex a = v1.minus(v2);
+            Vertex b = v3.minus(v2);
 
-//            System.out.println(v1+", "+v2 + ", " + v3);
-//            System.out.println(a+", "+b);
             Vertex normal = a.cross(b).normalize();
-//            Vertex ss = new Vertex(0, 0, -400);
-//            System.out.println((fi++) + ": " + normal + ", " + ss.minus(v1).dot(normal));
             face.setNormal(normal);
         }
     }
@@ -140,7 +136,8 @@ public class Mesh {
 
         faces = new ArrayList<>();
         for (Face face : originalFaces) {
-            if (originalVertices[face.getVertexIndices()[0]].minus(camera.getPosition()).dot(face.getNormal()) > 0) {
+            double d = -originalVertices[face.getVertexIndices()[0]].dot(face.normal);
+            if (camera.getPosition().dot(face.getNormal()) + d > 0) {
                 faces.add(face);
             }
         }
