@@ -102,6 +102,14 @@ public class Main extends Application {
                     lastTime = System.nanoTime();
                     waitForDisplaying(visualizer::drawScene);
                 }
+                try {
+                    long sleepTime = redrawSync / 1000000 - (System.currentTimeMillis() - lastTime / 1000000);
+                    if (sleepTime > 0) {
+                        Thread.sleep(sleepTime);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }).start();
     }
