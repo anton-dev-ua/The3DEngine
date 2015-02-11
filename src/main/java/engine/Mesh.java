@@ -41,11 +41,10 @@ public class Mesh {
         return faces.toArray(new Face[faces.size()]);
     }
 
-    public void alignWithCamera(Vertex cameraPosition, Vertex moveVector, double rotateY, double rotateX) {
-        move(cameraPosition);
-        rotateY(rotateY);
-        rotateX(rotateX);
-        move(moveVector.minus(cameraPosition));
+    public void alignWithCamera(Camera camera) {//Vertex cameraPosition, double rotateY, double rotateX) {
+        move(camera.getPosition());
+        rotateY(camera.getAngleY());
+        rotateX(camera.getAngleX());
     }
 
     private void rotateY(double a) {

@@ -13,6 +13,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -102,7 +103,6 @@ public class Main extends Application {
                     waitForDisplaying(visualizer::drawScene);
                 }
             }
-            System.out.println();
         }).start();
     }
 
@@ -184,7 +184,9 @@ public class Main extends Application {
                     scene.getMesh().reset();
                     pPosition.horizontalAngle = 0;
                     pPosition.verticalAngle = 0;
-                    pPosition.position = new Vertex(0, 0, 0);
+                    pPosition.position = new Vertex(0, 0, -400);
+                    fov = 90;
+                    visualizer.setScreen(width, height, fov);
                     visualizePosition();
                 }
                 if (event.getCode() == KeyCode.T) {
@@ -245,6 +247,7 @@ public class Main extends Application {
 
             }
         });
+
         primaryStage.getScene().setOnMouseMoved(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -262,6 +265,17 @@ public class Main extends Application {
 
                 visualizer.setMousePositionInfo(event.getSceneX(), event.getSceneY());
 
+            }
+        });
+
+        primaryStage.getScene().setOnScroll(new EventHandler<ScrollEvent>() {
+            @Override
+            public void handle(ScrollEvent event) {
+//                System.out.println("scroll: "+event.getDeltaY());
+                fov += event.getDeltaY() / 10;
+                if (fov > 120) fov = 120;
+                if (fov < 10) fov = 10;
+                visualizer.setScreen(width, height, fov);
             }
         });
     }

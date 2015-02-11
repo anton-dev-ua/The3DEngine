@@ -27,6 +27,8 @@ public class Camera {
     private Vertex rightN;
     private Vertex topN;
     private Vertex bottomN;
+    private double angleY;
+    private double angleX;
 
     public Camera(double width, double height, double fov) {
         this.width = width;
@@ -37,12 +39,12 @@ public class Camera {
         p = sp = new Vertex(0, 0, dist);
         q = sq = new Vertex(width / 2, 0, 0);
         r = sr = new Vertex(0, height / 2, 0);
-        s = ss = new Vertex(0, 0, -dist);
+        s = ss = new Vertex(0, 0, 0);
 
-        so = new Vertex(0, 0, -dist);
+        so = new Vertex(0, 0, 0);
 
         stdBackN = new Vertex(0, 0, 1);
-        stdBackO = new Vertex(0, 0, -dist + 1);
+        stdBackO = new Vertex(0, 0, 1);
 
         stdLeftN = new Vertex(dist, 0, width / 2);
         stdRightN = new Vertex(-dist, 0, width / 2);
@@ -82,6 +84,8 @@ public class Camera {
     }
 
     public Camera transform(Vertex moveVector, double angleY, double angleX) {
+        this.angleY = angleY;
+        this.angleX = angleX;
         p = sp;
         q = sq;
         r = sr;
@@ -132,5 +136,13 @@ public class Camera {
 
     public Vertex getPosition() {
         return s;
+    }
+
+    public double getAngleY() {
+        return angleY;
+    }
+
+    public double getAngleX() {
+        return angleX;
     }
 }

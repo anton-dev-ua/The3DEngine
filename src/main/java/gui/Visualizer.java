@@ -47,6 +47,14 @@ public class Visualizer {
 
     public Visualizer(Scene scene, double xSize, double ySize, double fov) {
         this.scene = scene;
+        setScreen(xSize, ySize, fov);
+
+//        showOnlyFace.add(0);
+//        showOnlyFace.add(18);
+
+    }
+
+    public void setScreen(double xSize, double ySize, double fov) {
         this.xSize = xSize;
         this.ySize = ySize;
         this.fov = fov;
@@ -55,9 +63,7 @@ public class Visualizer {
         rowSize = (int) xSize * 3;
         zBuffer = new double[(int) xSize * (int) (ySize + 2)];
 
-//        showOnlyFace.add(0);
-//        showOnlyFace.add(18);
-
+        scene.setCamera(new Camera(xSize, ySize, fov));
     }
 
 
@@ -84,13 +90,13 @@ public class Visualizer {
         Camera camera = scene.getCamera().transform(moveVector, angleY, angleX);
         mesh.reset();
         mesh.cutByCameraPyramid(camera);
-        mesh.alignWithCamera(camera.getPosition(), moveVector, angleY, angleX);
+        mesh.alignWithCamera(camera);
         drawMesh(mesh);
 
 //        Mesh cameraMesh = camera.getMesh();
-//        cameraMesh.transform(new Vertex(0,0,0), camera.getPosition().plus(new Vertex(0,0,dist)), 0,0);
-//        cameraMesh.cutByCameraPyramid(-dist);
-//        drawMesh(cameraMesh);
+//        cameraMesh.alignWithCamera(new Vertex(0, 0, -400), camera.getPosition(), 0, 0);
+//        cameraMesh.cutByCameraPyramid(1);
+//        drawMeshWire(cameraMesh);
 
         frame++;
 
@@ -109,12 +115,19 @@ public class Visualizer {
 
     }
 
+    private void drawMeshWire(Mesh mesh) {
+        calculateProjection(mesh);
+        drawWire(mesh);
+    }
+
     private void drawMesh(Mesh mesh) {
         calculateProjection(mesh);
 
         drawFaces(mesh);
 
-        drawWire(mesh);
+        if (drawWire) {
+            drawWire(mesh);
+        }
     }
 
     private void calculateProjection(Mesh mesh) {
@@ -141,10 +154,8 @@ public class Visualizer {
     }
 
     private void drawWire(Mesh mesh) {
-        if (drawWire) {
-            for (Mesh.Face face : mesh.getFaces()) {
-                drawFaceStroke(face);
-            }
+        for (Mesh.Face face : mesh.getFaces()) {
+            drawFaceStroke(face);
         }
     }
 
@@ -413,9 +424,9 @@ public class Visualizer {
 
     private Vertex toScreenPoint(Vertex vertex) {
         return new Vertex(
-                xSize / 2 + vertex.getX() * dist / (vertex.getZ() + dist),
-                ySize / 2 - vertex.getY() * dist / (vertex.getZ() + dist),
-                1 / (vertex.getZ() + dist)
+                xSize / 2 + vertex.getX() * dist / (vertex.getZ()),
+                ySize / 2 - vertex.getY() * dist / (vertex.getZ()),
+                1 / (vertex.getZ())
         );
     }
 
