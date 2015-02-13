@@ -5,6 +5,7 @@ import static java.lang.Math.*;
 public class Vertex {
     private double x, y, z;
     private boolean behindCamera;
+    public int index;
 
     public Vertex(double x, double y, double z) {
         this.x = x;
@@ -75,7 +76,7 @@ public class Vertex {
 
     @Override
     public String toString() {
-        return String.format("[%,7.2f,%,7.2f,%,7.2f]", x, y, z);
+        return String.format("[%,10.2f,%,10.2f,%,20.10f]", x, y, z);
     }
 
     public double dot(Vertex n) {

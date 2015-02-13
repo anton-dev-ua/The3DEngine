@@ -49,8 +49,8 @@ public class Visualizer {
         this.scene = scene;
         setScreen(xSize, ySize, fov);
 
-//        showOnlyFace.add(0);
-//        showOnlyFace.add(18);
+//        showOnlyFace.add(7);
+//        showOnlyFace.add(21);
 
     }
 
@@ -155,7 +155,8 @@ public class Visualizer {
 
     private void drawWire(Mesh mesh) {
         for (Mesh.Face face : mesh.getFaces()) {
-            drawFaceStroke(face);
+            if (showOnlyFace.isEmpty() || showOnlyFace.contains(face.index))
+                drawFaceStroke(face);
         }
     }
 
@@ -166,6 +167,8 @@ public class Visualizer {
 
 
         EdgeList[] edgeList = new EdgeList[(int) ySize + 2];
+
+        List<ScreenEdge> edges = new ArrayList<>();
 
         int minY = (int) ySize + 1;
         int n = vertexIndices.length;
@@ -184,32 +187,44 @@ public class Visualizer {
             ScreenEdge edge = calcEdge(v1, v2);
             edge.face = face;
 
-//            System.out.println(edge);
-
             addToEdgeList(edgeList, edge);
+            edges.add(edge);
             minY = min(minY, edge.y);
 
         }
 
         if (edgeList[minY] == null) return;
-        ScreenEdge edge1 = edgeList[minY].get(0);
-        ScreenEdge edge2 = edgeList[minY].get(1);
 
-
-//        double xLen = edge2.x0 - edge1.x0;
-//        double wLen = edge2.w0 - edge1.w0;
-
-
-        double xLen = edge1.x0 + edge2.dy * edge1.dx - edge2.v2.getX();
-        double wLen = edge1.w0 + edge2.dy * edge1.dw - edge2.v2.getZ();
-
-//        if (xLen == 0) {
-//            xLen = (edge2.x0 + edge2.dx * 10) - (edge1.x0 + edge1.dx * 10);
-//            wLen = (edge2.w0 + edge2.dw * 10) - (edge1.w0 + edge1.dw * 10);
+//        ScreenEdge edge1 = edgeList[minY].get(0);
+//        double dwx = 0;
+//        boolean found = false;
+//        for (ScreenEdge edge2 : edges) {
+//            if (edge1 == edge2) continue;
+//
+//            int dy = edge2.y - edge1.y;
+//
+//            double xLen = edge1.x0 + dy * edge1.dx - edge2.v1.getX();
+//            double wLen = edge1.w0 + dy * edge1.dw - edge2.v1.getZ();
+//            if (abs(xLen) > 1) {
+//                dwx = wLen / xLen;
+//                found = true;
+//                break;
+//            }
+//
+//            dy = (edge2.y + edge2.dy) - edge1.y;
+//
+//            xLen = edge1.x0 + dy * edge1.dx - edge2.v2.getX();
+//            wLen = edge1.w0 + dy * edge1.dw - edge2.v2.getZ();
+//            if (abs(xLen) > 1) {
+//                dwx = wLen / xLen;
+//                found = true;
+//                break;
+//            }
+//
+//
 //        }
-
-        double dwx = wLen / xLen;
-//        if (!edge1.starting) dwx = -dwx;
+//
+//        if (!found) return;
 
 //        System.out.println("dwx = " + dwx);
 
@@ -221,7 +236,9 @@ public class Visualizer {
         int yOffset = y * rowSize;
         int zBufYOffset = y * (int) xSize;
         do {
-            if (edgeList[y] != null) activeEdges.addAll(edgeList[y].getAll());
+            if (edgeList[y] != null) {
+                activeEdges.addAll(edgeList[y].getAll());
+            }
             int xLength = 0;
             for (ScreenEdge edge : activeEdges) {
 //                xlist[xLength++] = new EdgePoint(edge.nextX(), edge.nextW());
@@ -246,12 +263,12 @@ public class Visualizer {
                 int endX = (int) activeEdges.get(i + 1).x * 3;
 
                 double w = activeEdges.get(i).w;
+                double dwx = (activeEdges.get(i + 1).w - activeEdges.get(i).w) / (activeEdges.get(i + 1).x - activeEdges.get(i).x);
 //                System.out.println("w = " + w);
                 for (int x = startX; x < endX; x += 3) {
-//                    if (x / 3 == 380 && y == 340)// || x / 3 == 330 && y == 330)
-//                    {
-//                        System.out.printf("face: %3s; w = %-1.20f; zBuff = %-1.20s\n", face.index, w, zBuffer[zBufYOffset + zBuffX]);
-//                    }
+                    if (y == 304 && zBuffX == 425 || y == 279 && zBuffX == 396) {
+//                        System.out.printf("%2s: w=%s, dwx=%s, zBuf=%s, edges=%s\n", face.index, w, dwx, zBuffer[zBufYOffset + zBuffX], activeEdges);
+                    }
                     if (w > zBuffer[zBufYOffset + zBuffX] || !useZBuffer) {
                         buffer[yOffset + x + 0] = face.color.red;
                         buffer[yOffset + x + 1] = face.color.green;
@@ -363,8 +380,10 @@ public class Visualizer {
             sb.append(", v2=").append(v2);
             sb.append(", starting=").append(starting);
             sb.append(", x0=").append(x0);
-            sb.append(", x=").append(x);
+//            sb.append(", x=").append(x);
             sb.append(", dx=").append(dx);
+            sb.append(", w0=").append(w0);
+            sb.append(", dw=").append(dw);
             sb.append(", face=").append(face.index);
             sb.append('}');
             return sb.toString();

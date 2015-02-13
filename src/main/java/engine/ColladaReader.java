@@ -90,6 +90,7 @@ public class ColladaReader {
         }
 
         return new Mesh(vertices.toArray(new Vertex[vertices.size()]), faces).scale(SCALE);
+//        return new Mesh(vertices.toArray(new Vertex[vertices.size()]), new Face[]{faces[13]}).scale(SCALE);
 
     }
 

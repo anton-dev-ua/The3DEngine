@@ -28,26 +28,33 @@ public class Main extends Application {
     private Visualizer visualizer;
     private int width = 800;
     private int height = 600;
-    private double fov = 90;
     private engine.Scene scene;
 
 
     private PlayerPosition predefinedPositions[] = {
-            new PlayerPosition(new Vertex(0, 0, 0), 0, 0),
-            new PlayerPosition(new Vertex(-667, 0, 2120), 171, 8),
-            new PlayerPosition(new Vertex(-203.02, 0, 1247.92), -83, 21),
-            new PlayerPosition(new Vertex(-667, 0, 2120), 152.5, 12.6),
-            new PlayerPosition(new Vertex(37.17, 0, 330.50), 1.5, 7.2),
-            new PlayerPosition(new Vertex(-617.83, 0, 2232.50), 171.5, 50.6),
-            new PlayerPosition(new Vertex(-630.25, 0, 2172.95), 158.1, 24.7),
-            new PlayerPosition(new Vertex(-32.43, 0, 1026.39), 5.2, 22.7),     //60
-            new PlayerPosition(new Vertex(-32.43, 0, 1026.39), 0, 37.1),
-            new PlayerPosition(new Vertex(-32.43, 0, 1026.39), 0.6, 37.3),
-            new PlayerPosition(new Vertex(-523.73, 0, 2463.28), -170.8, 4.8),
-            new PlayerPosition(new Vertex(-523.73, 0, 2463.28), -169.8, 10.1),
-            new PlayerPosition(new Vertex(-618.36, 0, 2167.32), -179.7, -2),
-            new PlayerPosition(new Vertex(-619.36, -120, 1977.32), -179.7, -2),
-            new PlayerPosition(new Vertex(-102.31, -120, 1486.87), -389.7, -12),
+            new PlayerPosition(new Vertex(0, 0, -400), 0, 0, 90),
+            new PlayerPosition(new Vertex(27.136970204695142, 0.0, -293.0038611309138), 7.400000000000007, 3.600000000000026, 90.0),
+            new PlayerPosition(new Vertex(27.136970204695142, 0.0, -293.0038611309138), 5.200000000000003, 2.400000000000026, 90.0),
+            new PlayerPosition(new Vertex(-647.0700080776569, 0.0, 1037.4655184934118), 123.80000000000037, 16.799999999999997, 90.0),
+
+            new PlayerPosition(new Vertex(-640.1065836836125, 0.0, 849.642890192125), 110.00000000000044, 18.999999999999996, 90.0),
+            new PlayerPosition(new Vertex(-620.6425173683409, 0.0, 938.0072501898347), 116.60000000000043, 20.59999999999989, 90.0),
+            new PlayerPosition(new Vertex(-107.52776544268067, 0.0, 713.1287569393371), 151.9999999999993, 3.399999999999917, 90.0),
+            new PlayerPosition(new Vertex(-184.63111976815813, 0.0, 894.0414400821707), -27.29999999999987, 7.799999999999988, 90.0),
+            new PlayerPosition(new Vertex(-228.0832943613, 0.0, 844.9915097168952), -7.299999999999869, 7.799999999999988, 90.0),
+            new PlayerPosition(new Vertex(-650.2050378343187, 0.0, 840.6246662007345), 81.80000000000018, 0.0, 90.0),
+            new PlayerPosition(new Vertex(-648.1600773159007, 0.0, 850.4133400883513), 101.80000000000018, 0.0, 90.0),
+            new PlayerPosition(new Vertex(-44.56121611459678, 0.0, 690.9253423771717), -22.999999999999954, 6.3999999999999995, 90.0),
+            new PlayerPosition(new Vertex(-648.5168381350969, 0.0, 1714.643637871075), 158.20000000000024, 25.399999999999963, 90.0),
+            new PlayerPosition(new Vertex(-649.8395924009379, 0.0, 1125.150437875747), 179.19999999999973, 22.59999999999994, 90.0),
+            new PlayerPosition(new Vertex(-649.6999705975464, 0.0, 1115.151412635654), 179.19999999999973, 22.59999999999994, 90.0),
+            new PlayerPosition(new Vertex(-69.52136475844637, 0.0, 643.4631916585137), 156.9999999999993, 18.399999999999917, 90.0),
+            new PlayerPosition(new Vertex(-69.52136475844637, 0.0, 643.4631916585137), 157.39999999999915, 15.999999999999913, 90.0),
+            new PlayerPosition(new Vertex(-36.146648750840626, 0.0, -103.80299001267035), 346.5999999999988, 16.599999999999874, 90.0),
+            new PlayerPosition(new Vertex(-6.405199980249866, 0.0, 354.4009287278233), 358.39999999999867, 29.79999999999986, 48.0),
+            new PlayerPosition(new Vertex(-6.405199980249866, 0.0, 354.4009287278233), 358.9999999999985, 28.799999999999862, 48.0),
+            new PlayerPosition(new Vertex(-6.405199980249866, 0.0, 354.4009287278233), 358.59999999999854, 28.999999999999872, 48.0),
+            new PlayerPosition(new Vertex(-184.63111976815813, 0.0, 894.0414400821707), -32.29999999999987, 7.799999999999988, 90.0),
     };
     int predefinedPosIndex = 0;
 
@@ -68,13 +75,13 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         robot = new Robot();
         scene = new engine.Scene();
-        scene.setCamera(new Camera(width, height, fov));
+        scene.setCamera(new Camera(width, height, pPosition.fov));
 
 //        scene.setMesh(aCube().withEdgeLength(200).build());
 //        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/room-with-corner-stand.dae").getFile()));
         scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms.dae").getFile()));
 
-        visualizer = new Visualizer(scene, width, height, fov);
+        visualizer = new Visualizer(scene, width, height, pPosition.fov);
         visualizer.setAngleX((int) pPosition.verticalAngle);
         visualizer.setAngleY((int) pPosition.horizontalAngle);
         visualizer.setPosition(pPosition.position);
@@ -193,12 +200,11 @@ public class Main extends Application {
                     pPosition.horizontalAngle = 0;
                     pPosition.verticalAngle = 0;
                     pPosition.position = new Vertex(0, 0, -400);
-                    fov = 90;
-                    visualizer.setScreen(width, height, fov);
-                    visualizePosition();
+                    pPosition.fov = 90;
+                    applyNewPosition();
                 }
                 if (event.getCode() == KeyCode.T) {
-                    scene.getMesh().triangulate();
+                    scene.getMesh().triangulate(scene.getMesh().getOriginalFaces());
                 }
                 if (event.getCode() == KeyCode.V) {
                     visualizer.setShowVertexNumber(!visualizer.isShowVertexNumber());
@@ -219,7 +225,11 @@ public class Main extends Application {
                     if (predefinedPosIndex >= predefinedPositions.length) predefinedPosIndex = 0;
                     pPosition = predefinedPositions[predefinedPosIndex];
                     System.out.printf("predefined position: %s\n", predefinedPosIndex);
-                    visualizePosition();
+                    applyNewPosition();
+                }
+
+                if (event.getCode() == KeyCode.I) {
+                    System.out.println("new PlayerPosition(new Vertex(" + pPosition.position.getX() + ", " + pPosition.position.getY() + ", " + pPosition.position.getZ() + "), " + pPosition.horizontalAngle + ", " + pPosition.verticalAngle + ", " + pPosition.fov + "),");
                 }
 
 
@@ -280,15 +290,16 @@ public class Main extends Application {
             @Override
             public void handle(ScrollEvent event) {
 //                System.out.println("scroll: "+event.getDeltaY());
-                fov += event.getDeltaY() / 10;
-                if (fov > 120) fov = 120;
-                if (fov < 10) fov = 10;
-                visualizer.setScreen(width, height, fov);
+                pPosition.fov += event.getDeltaY() / 10;
+                if (pPosition.fov > 120) pPosition.fov = 120;
+                if (pPosition.fov < 10) pPosition.fov = 10;
+                visualizer.setScreen(width, height, pPosition.fov);
             }
         });
     }
 
-    private void visualizePosition() {
+    private void applyNewPosition() {
+        visualizer.setScreen(width, height, pPosition.fov);
         visualizer.setAngleY(pPosition.horizontalAngle);
         visualizer.setAngleX(pPosition.verticalAngle);
         visualizer.setPosition(pPosition.position);

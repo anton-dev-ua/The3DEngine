@@ -108,6 +108,7 @@ public class Camera {
         q = q.rotateX(a);
         r = r.rotateX(a);
 
+        backO = backO.rotateX(a);
         backN = backN.rotateX(a);
         leftN = leftN.rotateX(a);
         rightN = rightN.rotateX(a);
@@ -122,6 +123,7 @@ public class Camera {
         q = q.rotateY(a);
         r = r.rotateY(a);
 
+        backO = backO.rotateY(a);
         backN = backN.rotateY(a);
         leftN = leftN.rotateY(a);
         rightN = rightN.rotateY(a);
