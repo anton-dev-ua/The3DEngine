@@ -1,6 +1,7 @@
 package util;
 
 import engine.model.ColorRGB;
+import engine.model.Face;
 import engine.model.Mesh;
 import engine.model.Vertex;
 import org.w3c.dom.Document;
@@ -16,7 +17,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.util.*;
 
-import static engine.model.Mesh.Face;
 import static java.lang.Math.random;
 import static java.lang.String.format;
 

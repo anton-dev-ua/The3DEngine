@@ -1,6 +1,6 @@
 package engine.builder;
 
-import engine.model.Mesh;
+import engine.model.Face;
 import engine.model.Vertex;
 
 public class MeshBuilder {
@@ -9,11 +9,11 @@ public class MeshBuilder {
         return new Vertex(x, y, z);
     }
 
-    public static Mesh.Face face(int... vertexIndices) {
-        return new Mesh.Face(vertexIndices);
+    public static Face face(int... vertexIndices) {
+        return new Face(vertexIndices);
     }
 
-    protected Mesh.Face[] faces(Mesh.Face... faces) {
+    protected Face[] faces(Face... faces) {
         return faces;
     }
 

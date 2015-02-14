@@ -1,5 +1,6 @@
 package engine.builder;
 
+import engine.model.Face;
 import engine.model.Mesh;
 import engine.model.Vertex;
 
@@ -41,7 +42,7 @@ public class TorusBuilder extends MeshBuilder {
     public Mesh build() {
 
         List<Vertex> vertices = new ArrayList<>();
-        List<Mesh.Face> faces = new ArrayList<>();
+        List<Face> faces = new ArrayList<>();
 
         double delta = 2 * Math.PI / n;
 
@@ -70,7 +71,7 @@ public class TorusBuilder extends MeshBuilder {
 
         return new Mesh(
                 vertices.toArray(new Vertex[vertices.size()]),
-                faces.toArray(new Mesh.Face[faces.size()])
+                faces.toArray(new Face[faces.size()])
         );
     }
 }

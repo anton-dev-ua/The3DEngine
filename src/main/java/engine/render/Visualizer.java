@@ -1,5 +1,6 @@
 package engine.render;
 
+import engine.model.Face;
 import engine.model.Mesh;
 import engine.model.Vertex;
 import engine.scene.Camera;
@@ -139,7 +140,7 @@ public class Visualizer {
     private void drawFaces(Mesh mesh) {
         Arrays.fill(buffer, (byte) 0);
         Arrays.fill(zBuffer, 0);
-        for (Mesh.Face face : mesh.getFaces()) {
+        for (Face face : mesh.getFaces()) {
             if (showOnlyFace.isEmpty() || showOnlyFace.contains(face.index))
                 drawFace(face);
         }
@@ -147,13 +148,13 @@ public class Visualizer {
     }
 
     private void drawWire(Mesh mesh) {
-        for (Mesh.Face face : mesh.getFaces()) {
+        for (Face face : mesh.getFaces()) {
             if (showOnlyFace.isEmpty() || showOnlyFace.contains(face.index))
                 drawFaceStroke(face);
         }
     }
 
-    private void drawFace(Mesh.Face face) {
+    private void drawFace(Face face) {
         int[] vertexIndices = face.getVertexIndices();
 
         EdgeList[] edgeList = new EdgeList[(int) ySize + 2];
@@ -283,7 +284,7 @@ public class Visualizer {
         double dx;
         double w0, dw, w;
         boolean starting;
-        public Mesh.Face face;
+        public Face face;
 
 
         public ScreenEdge(Vertex v1, Vertex v2, boolean starting) {
@@ -335,9 +336,9 @@ public class Visualizer {
         }
     }
 
-    private void drawFaceStroke(Mesh.Face face) {
+    private void drawFaceStroke(Face face) {
         int[] pointIndices = face.getVertexIndices();
-        for (int i = 0; i < pointIndices.length - (face.isOpened() ? 1 : 0); i++) {
+        for (int i = 0; i < pointIndices.length; i++) {
 
             int pointIndex = pointIndices[i];
             int nextPointIndex = i < pointIndices.length - 1 ? pointIndices[i + 1] : pointIndices[0];

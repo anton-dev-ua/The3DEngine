@@ -75,7 +75,7 @@ public class Camera {
                         face(0, 4, 5, 1),
                         face(1, 5, 6, 2),
                         face(3, 2, 6, 7),
-                        face(8, 9).opened()
+                        face(8, 9, 8)
                 )
                 .build();
     }
