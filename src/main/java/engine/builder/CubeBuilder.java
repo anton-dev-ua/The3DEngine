@@ -1,4 +1,6 @@
-package engine;
+package engine.builder;
+
+import engine.model.Mesh;
 
 public class CubeBuilder extends MeshBuilder {
 

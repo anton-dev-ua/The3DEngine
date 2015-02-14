@@ -1,7 +1,10 @@
-package engine;
+package engine.scene;
 
-import static engine.GeneralMeshBuilder.aMesh;
-import static engine.MeshBuilder.face;
+import engine.model.Mesh;
+import engine.model.Vertex;
+
+import static engine.builder.GeneralMeshBuilder.aMesh;
+import static engine.builder.MeshBuilder.face;
 import static java.lang.Math.tan;
 import static java.lang.Math.toRadians;
 

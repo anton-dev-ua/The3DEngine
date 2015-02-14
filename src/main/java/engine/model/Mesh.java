@@ -1,4 +1,6 @@
-package engine;
+package engine.model;
+
+import engine.scene.Camera;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,7 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static engine.Mesh.Pair.pair;
+import static engine.model.Mesh.Pair.pair;
 import static java.lang.Math.*;
 
 public class Mesh {

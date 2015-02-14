@@ -1,4 +1,7 @@
-package engine;
+package engine.builder;
+
+import engine.model.Mesh;
+import engine.model.Vertex;
 
 import java.util.ArrayList;
 import java.util.List;

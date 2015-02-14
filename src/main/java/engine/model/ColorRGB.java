@@ -1,4 +1,4 @@
-package engine;
+package engine.model;
 
 public class ColorRGB {
     public byte red, green, blue;

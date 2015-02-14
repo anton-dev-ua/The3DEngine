@@ -1,4 +1,6 @@
-package engine;
+package engine.scene;
+
+import engine.model.Mesh;
 
 public class Scene {
     private Mesh mesh;

@@ -1,9 +1,9 @@
-package gui;
+package engine.render;
 
-import engine.Camera;
-import engine.Mesh;
-import engine.Scene;
-import engine.Vertex;
+import engine.model.Mesh;
+import engine.model.Vertex;
+import engine.scene.Camera;
+import engine.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.PixelFormat;

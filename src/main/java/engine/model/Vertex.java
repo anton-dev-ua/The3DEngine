@@ -1,4 +1,4 @@
-package engine;
+package engine.model;
 
 import static java.lang.Math.*;
 
@@ -55,14 +55,14 @@ public class Vertex {
         return behindCamera;
     }
 
-    Vertex rotateY(double ar) {
+    public Vertex rotateY(double ar) {
         double nx = x * cos(ar) + z * sin(ar);
         double ny = y;
         double nz = -x * sin(ar) + z * cos(ar);
         return new Vertex(nx, ny, nz);
     }
 
-    Vertex rotateX(double ar) {
+    public Vertex rotateX(double ar) {
         double nx = x;
         double ny = y * cos(ar) - z * sin(ar);
         double nz = y * sin(ar) + z * cos(ar);

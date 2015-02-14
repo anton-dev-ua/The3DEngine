@@ -1,8 +1,9 @@
 package gui;
 
-import engine.Camera;
-import engine.ColladaReader;
-import engine.Vertex;
+import engine.model.Vertex;
+import engine.render.Visualizer;
+import engine.scene.Camera;
+import engine.scene.PlayerPosition;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -17,6 +18,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import util.ColladaReader;
 
 import java.awt.*;
 import java.util.concurrent.CountDownLatch;
@@ -28,7 +30,7 @@ public class Main extends Application {
     private Visualizer visualizer;
     private int width = 800;
     private int height = 600;
-    private engine.Scene scene;
+    private engine.scene.Scene scene;
 
 
     private PlayerPosition predefinedPositions[] = {
@@ -74,7 +76,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         robot = new Robot();
-        scene = new engine.Scene();
+        scene = new engine.scene.Scene();
         scene.setCamera(new Camera(width, height, pPosition.fov));
 
 //        scene.setMesh(aCube().withEdgeLength(200).build());

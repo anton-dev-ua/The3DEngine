@@ -1,6 +1,6 @@
-package gui;
+package engine.scene;
 
-import engine.Vertex;
+import engine.model.Vertex;
 
 public class PlayerPosition {
 

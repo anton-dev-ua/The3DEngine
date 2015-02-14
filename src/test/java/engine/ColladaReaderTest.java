@@ -1,8 +1,11 @@
 package engine;
 
 
+import engine.model.Mesh;
+import engine.model.Vertex;
 import org.junit.Test;
 import org.xml.sax.SAXException;
+import util.ColladaReader;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
