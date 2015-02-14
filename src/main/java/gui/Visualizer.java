@@ -18,7 +18,6 @@ import static java.lang.Math.*;
 
 public class Visualizer {
 
-    public static final int ALL_FACES = -1;
     private final Scene scene;
     private double xSize;
     private double ySize;
@@ -93,11 +92,6 @@ public class Visualizer {
         mesh.alignWithCamera(camera);
         drawMesh(mesh);
 
-//        Mesh cameraMesh = camera.getMesh();
-//        cameraMesh.alignWithCamera(new Vertex(0, 0, -400), camera.getPosition(), 0, 0);
-//        cameraMesh.cutByCameraPyramid(1);
-//        drawMeshWire(cameraMesh);
-
         frame++;
 
         if ((spentTime = System.currentTimeMillis() - startTime) > 1000) {
@@ -148,7 +142,6 @@ public class Visualizer {
         for (Mesh.Face face : mesh.getFaces()) {
             if (showOnlyFace.isEmpty() || showOnlyFace.contains(face.index))
                 drawFace(face);
-//            break;
         }
         pixelWriter.setPixels(0, 0, (int) xSize, (int) ySize, PixelFormat.getByteRgbInstance(), buffer, 0, rowSize);
     }
@@ -162,9 +155,6 @@ public class Visualizer {
 
     private void drawFace(Mesh.Face face) {
         int[] vertexIndices = face.getVertexIndices();
-
-//        System.out.println("face = " + face.index);
-
 
         EdgeList[] edgeList = new EdgeList[(int) ySize + 2];
 
@@ -195,45 +185,7 @@ public class Visualizer {
 
         if (edgeList[minY] == null) return;
 
-//        System.out.println(edges);
-
-//        ScreenEdge edge1 = edgeList[minY].get(0);
-//        double dwx = 0;
-//        boolean found = false;
-//        for (ScreenEdge edge2 : edges) {
-//            if (edge1 == edge2) continue;
-//
-//            int dy = edge2.y - edge1.y;
-//
-//            double xLen = edge1.x0 + dy * edge1.dx - edge2.v1.getX();
-//            double wLen = edge1.w0 + dy * edge1.dw - edge2.v1.getZ();
-//            if (abs(xLen) > 1) {
-//                dwx = wLen / xLen;
-//                found = true;
-//                break;
-//            }
-//
-//            dy = (edge2.y + edge2.dy) - edge1.y;
-//
-//            xLen = edge1.x0 + dy * edge1.dx - edge2.v2.getX();
-//            wLen = edge1.w0 + dy * edge1.dw - edge2.v2.getZ();
-//            if (abs(xLen) > 1) {
-//                dwx = wLen / xLen;
-//                found = true;
-//                break;
-//            }
-//
-//
-//        }
-//
-//        if (!found) return;
-
-//        System.out.println("dwx = " + dwx);
-
-
-//        System.out.println("------------------------------------------------------------------------");
         List<ScreenEdge> activeEdges = new LinkedList<>();
-        EdgePoint xlist[] = new EdgePoint[10];
         int y = minY;
         int yOffset = y * rowSize;
         int zBufYOffset = y * (int) xSize;
@@ -243,34 +195,20 @@ public class Visualizer {
             }
             int xLength = 0;
             for (ScreenEdge edge : activeEdges) {
-//                xlist[xLength++] = new EdgePoint(edge.nextX(), edge.nextW());
                 edge.nextX();
                 edge.nextW();
                 edge.dy--;
             }
             Collections.sort(activeEdges);
-//            activeEdges.sort();
-//            Arrays.sort(xlist, 0, xLength);
-
-//            System.out.println(activeEdges);
-            if (xLength % 2 != 0) {
-//                System.out.println("xSize = " + xLength + ", " + activeEdges);
-            }
 
             for (int i = 0; i < activeEdges.size(); i += 2) {
-//                int startX = (int) xlist[i] * 3;
-//                int endX = (int) xlist[i + 1] * 3;
                 int startX = (int) round(activeEdges.get(i).x) * 3;
                 int zBuffX = (int) round(activeEdges.get(i).x);
                 int endX = (int) round(activeEdges.get(i + 1).x) * 3;
 
                 double w = activeEdges.get(i).w;
                 double dwx = (activeEdges.get(i + 1).w - activeEdges.get(i).w) / (activeEdges.get(i + 1).x - activeEdges.get(i).x);
-//                System.out.printf("y=%3s, dwx = %,20.18f  edges: %s\n", y, dwx, activeEdges);
                 for (int x = startX; x < endX; x += 3) {
-                    if (y == 304 && zBuffX == 425 || y == 279 && zBuffX == 396) {
-//                        System.out.printf("%2s: w=%s, dwx=%s, zBuf=%s, edges=%s\n", face.index, w, dwx, zBuffer[zBufYOffset + zBuffX], activeEdges);
-                    }
                     if (w > zBuffer[zBufYOffset + zBuffX] || !useZBuffer) {
                         buffer[yOffset + x + 0] = face.color.red;
                         buffer[yOffset + x + 1] = face.color.green;
@@ -349,7 +287,6 @@ public class Visualizer {
 
 
         public ScreenEdge(Vertex v1, Vertex v2, boolean starting) {
-//            System.out.println(v1.getY() + " ->  " + v2.getY());
             y = (int) round(v1.getY());
             x0 = v1.getX();
             dy = (int) round(v2.getY()) - (int) round(v1.getY());
@@ -399,7 +336,6 @@ public class Visualizer {
     }
 
     private void drawFaceStroke(Mesh.Face face) {
-//        gc.setStroke(new Color(face.color.red, face.color.green, face.color.blue, 1));
         int[] pointIndices = face.getVertexIndices();
         for (int i = 0; i < pointIndices.length - (face.isOpened() ? 1 : 0); i++) {
 
@@ -503,15 +439,6 @@ public class Visualizer {
 
         public ScreenEdge get(int index) {
             return edgeList.get(index);
-        }
-    }
-
-    private class EdgePoint {
-        double x, w;
-
-        public EdgePoint(double x, double w) {
-            this.x = x;
-            this.w = w;
         }
     }
 
