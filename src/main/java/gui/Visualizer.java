@@ -179,7 +179,7 @@ public class Visualizer {
             Vertex v1 = screenPoints[v1i];
             Vertex v2 = screenPoints[v2i];
 
-            if ((int) v1.getY() - (int) v2.getY() == 0) {
+            if ((int) round(v1.getY()) - (int) round(v2.getY()) == 0) {
                 continue;
             }
 
@@ -194,6 +194,8 @@ public class Visualizer {
         }
 
         if (edgeList[minY] == null) return;
+
+//        System.out.println(edges);
 
 //        ScreenEdge edge1 = edgeList[minY].get(0);
 //        double dwx = 0;
@@ -252,19 +254,19 @@ public class Visualizer {
 
 //            System.out.println(activeEdges);
             if (xLength % 2 != 0) {
-                System.out.println("xSize = " + xLength + ", " + activeEdges);
+//                System.out.println("xSize = " + xLength + ", " + activeEdges);
             }
 
             for (int i = 0; i < activeEdges.size(); i += 2) {
 //                int startX = (int) xlist[i] * 3;
 //                int endX = (int) xlist[i + 1] * 3;
-                int startX = (int) activeEdges.get(i).x * 3;
-                int zBuffX = (int) activeEdges.get(i).x;
-                int endX = (int) activeEdges.get(i + 1).x * 3;
+                int startX = (int) round(activeEdges.get(i).x) * 3;
+                int zBuffX = (int) round(activeEdges.get(i).x);
+                int endX = (int) round(activeEdges.get(i + 1).x) * 3;
 
                 double w = activeEdges.get(i).w;
                 double dwx = (activeEdges.get(i + 1).w - activeEdges.get(i).w) / (activeEdges.get(i + 1).x - activeEdges.get(i).x);
-//                System.out.println("w = " + w);
+//                System.out.printf("y=%3s, dwx = %,20.18f  edges: %s\n", y, dwx, activeEdges);
                 for (int x = startX; x < endX; x += 3) {
                     if (y == 304 && zBuffX == 425 || y == 279 && zBuffX == 396) {
 //                        System.out.printf("%2s: w=%s, dwx=%s, zBuf=%s, edges=%s\n", face.index, w, dwx, zBuffer[zBufYOffset + zBuffX], activeEdges);
@@ -348,9 +350,9 @@ public class Visualizer {
 
         public ScreenEdge(Vertex v1, Vertex v2, boolean starting) {
 //            System.out.println(v1.getY() + " ->  " + v2.getY());
-            y = (int) (v1.getY());
+            y = (int) round(v1.getY());
             x0 = v1.getX();
-            dy = (int) (v2.getY()) - (int) (v1.getY());
+            dy = (int) round(v2.getY()) - (int) round(v1.getY());
             dx = (v2.getX() - v1.getX()) / (v2.getY() - v1.getY());
             w0 = v1.getZ();
             dw = (v2.getZ() - w0) / (v2.getY() - v1.getY());
@@ -380,10 +382,11 @@ public class Visualizer {
             sb.append(", v2=").append(v2);
             sb.append(", starting=").append(starting);
             sb.append(", x0=").append(x0);
-//            sb.append(", x=").append(x);
             sb.append(", dx=").append(dx);
+            sb.append(", x=").append(x);
             sb.append(", w0=").append(w0);
             sb.append(", dw=").append(dw);
+            sb.append(", w=").append(w);
             sb.append(", face=").append(face.index);
             sb.append('}');
             return sb.toString();
