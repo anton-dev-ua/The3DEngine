@@ -3,8 +3,8 @@ package engine.model;
 import static java.lang.Math.*;
 
 public class Vertex {
-    private double x, y, z;
-    private boolean behindCamera;
+    public double x, y, z;
+    public boolean behindCamera;
     public int index;
 
     public Vertex(double x, double y, double z) {

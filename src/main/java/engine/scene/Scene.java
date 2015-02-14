@@ -1,6 +1,7 @@
 package engine.scene;
 
 import engine.model.Mesh;
+import engine.model.MeshPreProcessor;
 
 public class Scene {
     private Mesh mesh;
@@ -8,6 +9,7 @@ public class Scene {
 
     public void setMesh(Mesh mesh) {
         this.mesh = mesh;
+        MeshPreProcessor.calculateNormals(mesh);
     }
 
     public Mesh getMesh() {

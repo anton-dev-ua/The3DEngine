@@ -4,6 +4,7 @@ import engine.model.Face;
 import engine.model.Mesh;
 import engine.model.Vertex;
 import engine.scene.Camera;
+import engine.scene.Player;
 import engine.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -273,6 +274,10 @@ public class Visualizer {
 
         this.mouseSceneX = sceneX;
         this.mouseSceneY = sceneY;
+    }
+
+    public Player getPlayer() {
+        return new Player(moveVector, angleY, angleX, fov);
     }
 
     public class ScreenEdge implements Comparable<ScreenEdge> {
