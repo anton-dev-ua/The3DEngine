@@ -158,9 +158,7 @@ public class Visualizer {
     private void drawFace(Face face) {
         int[] vertexIndices = face.getVertexIndices();
 
-        EdgeList[] edgeList = new EdgeList[(int) ySize + 2];
-
-        List<ScreenEdge> edges = new ArrayList<>();
+        List[] edgeList = new ArrayList[(int) ySize + 2];
 
         int minY = (int) ySize + 1;
         int n = vertexIndices.length;
@@ -175,28 +173,25 @@ public class Visualizer {
                 continue;
             }
 
-
-            ScreenEdge edge = calcEdge(v1, v2);
+            Edge edge = calcEdge(v1, v2);
             edge.face = face;
 
             addToEdgeList(edgeList, edge);
-            edges.add(edge);
             minY = min(minY, edge.y);
 
         }
 
         if (edgeList[minY] == null) return;
 
-        List<ScreenEdge> activeEdges = new LinkedList<>();
+        List<Edge> activeEdges = new LinkedList<>();
         int y = minY;
         int yOffset = y * rowSize;
         int zBufYOffset = y * (int) xSize;
         do {
             if (edgeList[y] != null) {
-                activeEdges.addAll(edgeList[y].getAll());
+                activeEdges.addAll(edgeList[y]);
             }
-            int xLength = 0;
-            for (ScreenEdge edge : activeEdges) {
+            for (Edge edge : activeEdges) {
                 edge.nextX();
                 edge.nextW();
                 edge.dy--;
@@ -233,19 +228,17 @@ public class Visualizer {
 
     }
 
-    private ScreenEdge calcEdge(Vertex v1, Vertex v2) {
-        ScreenEdge edge;
+    private Edge calcEdge(Vertex v1, Vertex v2) {
         if (v1.getY() < v2.getY()) {
-            edge = new ScreenEdge(v1, v2, true);
+            return new Edge(v1, v2, true);
         } else {
-            edge = new ScreenEdge(v2, v1, false);
+            return new Edge(v2, v1, false);
         }
-        return edge;
     }
 
-    private void addToEdgeList(EdgeList[] edgeList, ScreenEdge edge) {
+    private void addToEdgeList(List[] edgeList, Edge edge) {
         if (edgeList[edge.y] == null) {
-            edgeList[edge.y] = new EdgeList();
+            edgeList[edge.y] = new ArrayList<>();
         }
         edgeList[edge.y].add(edge);
     }
@@ -278,67 +271,6 @@ public class Visualizer {
 
     public Player getPlayer() {
         return new Player(moveVector, angleY, angleX, fov);
-    }
-
-    public class ScreenEdge implements Comparable<ScreenEdge> {
-        private final Vertex v1;
-        private final Vertex v2;
-        int y;
-        double x0, x;
-        int dy;
-        double dx;
-        double w0, dw, w;
-        boolean starting;
-        public Face face;
-
-
-        public ScreenEdge(Vertex v1, Vertex v2, boolean starting) {
-            y = (int) round(v1.getY());
-            x0 = v1.getX();
-            dy = (int) round(v2.getY()) - (int) round(v1.getY());
-            dx = (v2.getX() - v1.getX()) / (v2.getY() - v1.getY());
-            w0 = v1.getZ();
-            dw = (v2.getZ() - w0) / (v2.getY() - v1.getY());
-            x = x0 - dx;
-            w = w0 - dw;
-            this.starting = starting;
-            this.v1 = v1;
-            this.v2 = v2;
-        }
-
-        public double nextX() {
-            x += dx;
-            return x;
-        }
-
-        public double nextW() {
-            w += dw;
-            return w;
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder sb = new StringBuilder("{");
-            sb.append("y=").append(y);
-            sb.append(", dy=").append(dy);
-            sb.append(", v1=").append(v1);
-            sb.append(", v2=").append(v2);
-            sb.append(", starting=").append(starting);
-            sb.append(", x0=").append(x0);
-            sb.append(", dx=").append(dx);
-            sb.append(", x=").append(x);
-            sb.append(", w0=").append(w0);
-            sb.append(", dw=").append(dw);
-            sb.append(", w=").append(w);
-            sb.append(", face=").append(face.index);
-            sb.append('}');
-            return sb.toString();
-        }
-
-        @Override
-        public int compareTo(ScreenEdge o) {
-            return x < o.x ? -1 : (x > o.x ? 1 : 0);
-        }
     }
 
     private void drawFaceStroke(Face face) {
@@ -420,32 +352,6 @@ public class Visualizer {
 
     public void setAngleX(double angleX) {
         this.angleX = angleX;
-    }
-
-    public static class EdgeList implements Iterable {
-        List<ScreenEdge> edgeList = new ArrayList<>();
-
-        public void add(ScreenEdge edge) {
-            edgeList.add(edge);
-        }
-
-
-        @Override
-        public Iterator<ScreenEdge> iterator() {
-            return edgeList.iterator();
-        }
-
-        public int size() {
-            return edgeList.size();
-        }
-
-        public Collection<? extends ScreenEdge> getAll() {
-            return edgeList;
-        }
-
-        public ScreenEdge get(int index) {
-            return edgeList.get(index);
-        }
     }
 
     public boolean isUseZBuffer() {

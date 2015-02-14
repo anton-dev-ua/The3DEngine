@@ -37,6 +37,7 @@ public class Main extends Application {
     private int height = 600;
     private engine.scene.Scene scene;
 
+    private long limitFps = 60;
 
     private Player predefinedPositions[] = {
             new Player(new Vertex(0, 0, -400), 0, 0, 90),
@@ -75,7 +76,6 @@ public class Main extends Application {
     private boolean mouseCaptured;
     private double oldY;
     private double oldX;
-    private long limitFps = 60;
     private PrintWriter pathWriter;
     private boolean recording;
     private int pathIndex;
@@ -118,7 +118,7 @@ public class Main extends Application {
             long lastTime = 0;
 
 //            startRecording();
-            startPlaying();
+//            startPlaying();
 
             while (running) {
                 if (System.nanoTime() - lastTime > redrawSync) {
