@@ -18,27 +18,17 @@ public class Edge implements Comparable<Edge> {
 
 
     public Edge(Vertex v1, Vertex v2, boolean starting) {
-        y = (int) round(v1.getY());
-        x0 = v1.getX();
-        dy = (int) round(v2.getY()) - (int) round(v1.getY());
-        dx = (v2.getX() - v1.getX()) / (v2.getY() - v1.getY());
-        w0 = v1.getZ();
-        dw = (v2.getZ() - w0) / (v2.getY() - v1.getY());
+        y = (int) round(v1.y);
+        x0 = v1.x;
+        dy = (int) round(v2.y) - (int) round(v1.y);
+        dx = (v2.x - v1.x) / (v2.y - v1.y);
+        w0 = v1.z;
+        dw = (v2.z - w0) / (v2.y - v1.y);
         x = x0 - dx;
         w = w0 - dw;
         this.starting = starting;
         this.v1 = v1;
         this.v2 = v2;
-    }
-
-    public double nextX() {
-        x += dx;
-        return x;
-    }
-
-    public double nextW() {
-        w += dw;
-        return w;
     }
 
     @Override
@@ -62,6 +52,12 @@ public class Edge implements Comparable<Edge> {
 
     @Override
     public int compareTo(Edge o) {
-        return x < o.x ? -1 : (x > o.x ? 1 : 0);
+        return x < o.x ? -1 : 1;
+    }
+
+    public void nextY() {
+        x += dx;
+        w += dw;
+        dy--;
     }
 }

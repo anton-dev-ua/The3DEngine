@@ -17,13 +17,13 @@ public class MeshPreProcessor {
     public static void calculateNormals(Mesh mesh) {
         for (Face face : mesh.originalFaces) {
             {
-                Vertex[] projXYPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.getX(), vertex.getY(), 0));
-                Vertex[] projXZPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.getX(), vertex.getZ(), 0));
-                Vertex[] projYZPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.getY(), vertex.getZ(), 0));
+                Vertex[] projXYPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.x, vertex.y, 0));
+                Vertex[] projXZPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.x, vertex.z, 0));
+                Vertex[] projYZPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.y, vertex.z, 0));
 
-                double xyProjectionArea = abs(IntStream.range(0, projXYPoints.length).mapToDouble(i -> projXYPoints[i].cross(projXYPoints[i < projXYPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
-                double xzProjectionArea = abs(IntStream.range(0, projXZPoints.length).mapToDouble(i -> projXZPoints[i].cross(projXZPoints[i < projXZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
-                double yzProjectionArea = abs(IntStream.range(0, projYZPoints.length).mapToDouble(i -> projYZPoints[i].cross(projYZPoints[i < projYZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
+                double xyProjectionArea = abs(IntStream.range(0, projXYPoints.length).mapToDouble(i -> projXYPoints[i].cross(projXYPoints[i < projXYPoints.length - 1 ? i + 1 : 0]).z).sum());
+                double xzProjectionArea = abs(IntStream.range(0, projXZPoints.length).mapToDouble(i -> projXZPoints[i].cross(projXZPoints[i < projXZPoints.length - 1 ? i + 1 : 0]).z).sum());
+                double yzProjectionArea = abs(IntStream.range(0, projYZPoints.length).mapToDouble(i -> projYZPoints[i].cross(projYZPoints[i < projYZPoints.length - 1 ? i + 1 : 0]).z).sum());
 
                 Vertex[] projPoints;
                 if (xyProjectionArea > xzProjectionArea && xyProjectionArea > yzProjectionArea) {
@@ -33,7 +33,7 @@ public class MeshPreProcessor {
                 } else {
                     projPoints = projYZPoints;
                 }
-                int minPointIndex = IntStream.range(0, projPoints.length).mapToObj(i -> pair(i, projPoints[i].getX())).min((p1, p2) -> p1.v < p2.v ? -1 : 1).get().i;
+                int minPointIndex = IntStream.range(0, projPoints.length).mapToObj(i -> pair(i, projPoints[i].x)).min((p1, p2) -> p1.v < p2.v ? -1 : 1).get().i;
 
                 int nextPointIndex = minPointIndex < projPoints.length - 1 ? minPointIndex + 1 : 0;
                 int prevPointIndex = minPointIndex > 0 ? minPointIndex - 1 : projPoints.length - 1;
@@ -76,13 +76,13 @@ public class MeshPreProcessor {
 
     static List<Face> triangulateFace(Mesh mesh, Face face) {
         List<Face> faceTrianglesList = new ArrayList<>();
-        Vertex[] projXYPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.getX(), vertex.getY(), 0));
-        Vertex[] projXZPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.getX(), vertex.getZ(), 0));
-        Vertex[] projYZPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.getY(), vertex.getZ(), 0));
+        Vertex[] projXYPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.x, vertex.y, 0));
+        Vertex[] projXZPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.x, vertex.z, 0));
+        Vertex[] projYZPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.y, vertex.z, 0));
 
-        double xyProjectionArea = abs(IntStream.range(0, projXYPoints.length).mapToDouble(i -> projXYPoints[i].cross(projXYPoints[i < projXYPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
-        double xzProjectionArea = abs(IntStream.range(0, projXZPoints.length).mapToDouble(i -> projXZPoints[i].cross(projXZPoints[i < projXZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
-        double yzProjectionArea = abs(IntStream.range(0, projYZPoints.length).mapToDouble(i -> projYZPoints[i].cross(projYZPoints[i < projYZPoints.length - 1 ? i + 1 : 0]).getZ()).sum());
+        double xyProjectionArea = abs(IntStream.range(0, projXYPoints.length).mapToDouble(i -> projXYPoints[i].cross(projXYPoints[i < projXYPoints.length - 1 ? i + 1 : 0]).z).sum());
+        double xzProjectionArea = abs(IntStream.range(0, projXZPoints.length).mapToDouble(i -> projXZPoints[i].cross(projXZPoints[i < projXZPoints.length - 1 ? i + 1 : 0]).z).sum());
+        double yzProjectionArea = abs(IntStream.range(0, projYZPoints.length).mapToDouble(i -> projYZPoints[i].cross(projYZPoints[i < projYZPoints.length - 1 ? i + 1 : 0]).z).sum());
 
         Vertex[] projPoints;
         if (xyProjectionArea > xzProjectionArea && xyProjectionArea > yzProjectionArea) {
@@ -92,7 +92,7 @@ public class MeshPreProcessor {
         } else {
             projPoints = projYZPoints;
         }
-        int minPointIndex = IntStream.range(0, projPoints.length).mapToObj(i -> pair(i, projPoints[i].getX())).min((p1, p2) -> p1.v < p2.v ? -1 : 1).get().i;
+        int minPointIndex = IntStream.range(0, projPoints.length).mapToObj(i -> pair(i, projPoints[i].x)).min((p1, p2) -> p1.v < p2.v ? -1 : 1).get().i;
 
         double sign;
         {
@@ -102,7 +102,7 @@ public class MeshPreProcessor {
             Vertex a = projPoints[nextPointIndex].minus(projPoints[minPointIndex]);
             Vertex b = projPoints[prevPointIndex].minus(projPoints[minPointIndex]);
 
-            sign = signum(a.cross(b).getZ());
+            sign = signum(a.cross(b).z);
         }
 
         List<Integer> pointIndices = IntStream.range(0, projPoints.length).mapToObj(Integer::valueOf).collect(Collectors.toList());
@@ -123,7 +123,7 @@ public class MeshPreProcessor {
             Vertex b = p1.minus(p2);
 
             boolean found = true;
-            if (signum(a.cross(b).getZ()) == sign) {
+            if (signum(a.cross(b).z) == sign) {
                 TriangleHelper triangleHelper = new TriangleHelper(p1, p2, p3);
                 for (int pi : pointIndices) {
                     if (face.vertexIndices[i1] == face.vertexIndices[pi] ||

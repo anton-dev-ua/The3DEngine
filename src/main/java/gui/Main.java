@@ -316,7 +316,7 @@ public class Main extends Application {
                 }
 
                 if (event.getCode() == KeyCode.I) {
-                    System.out.println("new PlayerPosition(new Vertex(" + pPosition.position.getX() + ", " + pPosition.position.getY() + ", " + pPosition.position.getZ() + "), " + pPosition.horizontalAngle + ", " + pPosition.verticalAngle + ", " + pPosition.fov + "),");
+                    System.out.println("new PlayerPosition(new Vertex(" + pPosition.position.x + ", " + pPosition.position.y + ", " + pPosition.position.z + "), " + pPosition.horizontalAngle + ", " + pPosition.verticalAngle + ", " + pPosition.fov + "),");
                 }
 
 

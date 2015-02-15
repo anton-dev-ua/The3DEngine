@@ -23,18 +23,6 @@ public class Vertex {
         return new Vertex(x * a, y * a, z * a);
     }
 
-    public double getX() {
-        return x;
-    }
-
-    public double getY() {
-        return y;
-    }
-
-    public double getZ() {
-        return z;
-    }
-
     public Vertex plus(Vertex moveVector) {
         return new Vertex(x + moveVector.x, y + moveVector.y, z + moveVector.z);
     }

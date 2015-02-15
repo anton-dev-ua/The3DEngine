@@ -16,8 +16,6 @@ import javafx.scene.text.Font;
 
 import java.util.*;
 
-import static java.lang.Math.*;
-
 public class Visualizer {
 
     private final Scene scene;
@@ -36,7 +34,7 @@ public class Visualizer {
     private Vertex[] screenPoints;
     private PixelWriter pixelWriter;
 
-    private byte buffer[];
+    private int buffer[];
     private int rowSize;
     private boolean drawWire;
 
@@ -58,11 +56,11 @@ public class Visualizer {
     public void setScreen(double xSize, double ySize, double fov) {
         this.xSize = xSize;
         this.ySize = ySize;
+        rowSize = (int) xSize;
         this.fov = fov;
-        dist = xSize / 2 / tan(toRadians(fov / 2));
-        buffer = new byte[(int) xSize * (int) (ySize + 2) * 3];
-        rowSize = (int) xSize * 3;
-        zBuffer = new double[(int) xSize * (int) (ySize + 2)];
+        dist = xSize / 2 / Math.tan(Math.toRadians(fov / 2));
+        buffer = new int[rowSize * (int) (ySize + 2)];
+        zBuffer = new double[rowSize * (int) (ySize + 2)];
 
         scene.setCamera(new Camera(xSize, ySize, fov));
     }
@@ -85,7 +83,9 @@ public class Visualizer {
     long spentTime;
 
     public void drawScene() {
-        gc.clearRect(0, 0, xSize, ySize);
+        if (gc != null) {
+            gc.clearRect(0, 0, xSize, ySize);
+        }
 
         Mesh mesh = scene.getMesh();
         Camera camera = scene.getCamera().transform(moveVector, angleY, angleX);
@@ -100,14 +100,18 @@ public class Visualizer {
             fps = (double) (frame * 1000) / spentTime;
             frame = 0;
             startTime = System.currentTimeMillis();
+            System.out.printf("\rfps: %,4.0f", fps);
         }
-        gc.fillText(String.format("FPS  : %,4.0f", fps), 10, 20);
-        gc.fillText(String.format("HA   : %s", angleY), 10, 50);
-        gc.fillText(String.format("VA   : %s", angleX), 10, 35);
-        gc.fillText(String.format("pos  : %s", moveVector), 10, 65);
-        gc.fillText(String.format("verts: %s", mesh.getVisibleVerticesCount()), 10, 80);
-        gc.fillText(String.format("faces: %s", mesh.getFaces().length), 10, 95);
-        gc.fillText(String.format("mouse: %,3.0f, %,3.0f", mouseSceneX, mouseSceneY), 10, 110);
+
+        if (gc != null) {
+            gc.fillText(String.format("FPS  : %,4.0f", fps), 10, 20);
+            gc.fillText(String.format("HA   : %s", angleY), 10, 50);
+            gc.fillText(String.format("VA   : %s", angleX), 10, 35);
+            gc.fillText(String.format("pos  : %s", moveVector), 10, 65);
+            gc.fillText(String.format("verts: %s", mesh.getVisibleVerticesCount()), 10, 80);
+            gc.fillText(String.format("faces: %s", mesh.getFaces().length), 10, 95);
+            gc.fillText(String.format("mouse: %,3.0f, %,3.0f", mouseSceneX, mouseSceneY), 10, 110);
+        }
 
     }
 
@@ -139,13 +143,15 @@ public class Visualizer {
     }
 
     private void drawFaces(Mesh mesh) {
-        Arrays.fill(buffer, (byte) 0);
+        Arrays.fill(buffer, 0);
         Arrays.fill(zBuffer, 0);
         for (Face face : mesh.getFaces()) {
             if (showOnlyFace.isEmpty() || showOnlyFace.contains(face.index))
                 drawFace(face);
         }
-        pixelWriter.setPixels(0, 0, (int) xSize, (int) ySize, PixelFormat.getByteRgbInstance(), buffer, 0, rowSize);
+        if (pixelWriter != null) {
+            pixelWriter.setPixels(0, 0, rowSize, (int) ySize, PixelFormat.getIntArgbInstance(), buffer, 0, rowSize);
+        }
     }
 
     private void drawWire(Mesh mesh) {
@@ -160,6 +166,75 @@ public class Visualizer {
 
         List[] edgeList = new ArrayList[(int) ySize + 2];
 
+        int minY = calcEdges(face, vertexIndices, edgeList);
+
+        if (edgeList[minY] == null) return;
+
+        List<Edge> activeEdges = new LinkedList<>();
+        int y = minY;
+        int yOffset = y * rowSize;
+        do {
+            nextRow(edgeList[y], activeEdges);
+
+            drawLine(face, activeEdges, yOffset);
+
+            y++;
+            yOffset += rowSize;
+
+        } while (y < 600 && (activeEdges.size() > 0 || edgeList[y] != null));
+
+    }
+
+    private void drawLine(Face face, List<Edge> activeEdges, int yOffset) {
+        Iterator<Edge> activeEdgesIterator = activeEdges.iterator();
+        while (activeEdgesIterator.hasNext()) {
+            Edge edge1 = activeEdgesIterator.next();
+            if (edge1.dy <= 0) activeEdgesIterator.remove();
+
+            Edge edge2 = activeEdgesIterator.next();
+            if (edge2.dy <= 0) activeEdgesIterator.remove();
+
+            int startX = (int) Math.round(edge1.x);
+            int buffX = yOffset + startX;
+            int endBuffX = yOffset + (int) Math.round(edge2.x);
+
+            double w = edge1.w;
+            double dwx = (edge2.w - edge1.w) / (edge2.x - edge1.x);
+            if (endBuffX >= 0 && endBuffX < zBuffer.length && endBuffX < buffer.length) {
+                while (buffX < endBuffX) {
+                    if (w > zBuffer[buffX]) {
+                        buffer[buffX] = face.color.value;
+                        zBuffer[buffX] = w;
+                    }
+                    buffX++;
+                    w += dwx;
+                }
+            }
+
+        }
+    }
+
+    private void removeUnactiveEdges(List<Edge> activeEdges) {
+        activeEdges.removeIf(edge -> edge.dy <= 0);
+    }
+
+    private void nextRow(List activatedEdges, List<Edge> activeEdges) {
+        if (activatedEdges != null) {
+            activeEdges.addAll(activatedEdges);
+
+        }
+        for (Edge edge : activeEdges) {
+            edge.nextY();
+        }
+        Collections.sort(activeEdges, (e1, e2) -> e1.x < e2.x ? -1 : 1);
+
+    }
+
+//    private void sort(List<Edge> activeEdges) {
+//        Collections.sort(activeEdges);
+//    }
+
+    private int calcEdges(Face face, int[] vertexIndices, List[] edgeList) {
         int minY = (int) ySize + 1;
         int n = vertexIndices.length;
         for (int i = 0; i < n; i++) {
@@ -169,7 +244,7 @@ public class Visualizer {
             Vertex v1 = screenPoints[v1i];
             Vertex v2 = screenPoints[v2i];
 
-            if ((int) round(v1.getY()) - (int) round(v2.getY()) == 0) {
+            if ((int) Math.round(v1.y) - (int) Math.round(v2.y) == 0) {
                 continue;
             }
 
@@ -177,59 +252,14 @@ public class Visualizer {
             edge.face = face;
 
             addToEdgeList(edgeList, edge);
-            minY = min(minY, edge.y);
+            minY = Math.min(minY, edge.y);
 
         }
-
-        if (edgeList[minY] == null) return;
-
-        List<Edge> activeEdges = new LinkedList<>();
-        int y = minY;
-        int yOffset = y * rowSize;
-        int zBufYOffset = y * (int) xSize;
-        do {
-            if (edgeList[y] != null) {
-                activeEdges.addAll(edgeList[y]);
-            }
-            for (Edge edge : activeEdges) {
-                edge.nextX();
-                edge.nextW();
-                edge.dy--;
-            }
-            Collections.sort(activeEdges);
-
-            for (int i = 0; i < activeEdges.size(); i += 2) {
-                int startX = (int) round(activeEdges.get(i).x) * 3;
-                int zBuffX = (int) round(activeEdges.get(i).x);
-                int endX = (int) round(activeEdges.get(i + 1).x) * 3;
-
-                double w = activeEdges.get(i).w;
-                double dwx = (activeEdges.get(i + 1).w - activeEdges.get(i).w) / (activeEdges.get(i + 1).x - activeEdges.get(i).x);
-                for (int x = startX; x < endX; x += 3) {
-                    if (w > zBuffer[zBufYOffset + zBuffX] || !useZBuffer) {
-                        buffer[yOffset + x + 0] = face.color.red;
-                        buffer[yOffset + x + 1] = face.color.green;
-                        buffer[yOffset + x + 2] = face.color.blue;
-
-                        zBuffer[zBufYOffset + zBuffX] = w;
-                    }
-                    w += dwx;
-                    zBuffX++;
-                }
-            }
-
-            activeEdges.removeIf(edge -> edge.dy <= 0);
-
-            y++;
-            yOffset += rowSize;
-            zBufYOffset += (int) xSize;
-
-        } while (y < 600 && (activeEdges.size() > 0 || edgeList[y] != null));
-
+        return minY;
     }
 
     private Edge calcEdge(Vertex v1, Vertex v2) {
-        if (v1.getY() < v2.getY()) {
+        if (v1.y < v2.y) {
             return new Edge(v1, v2, true);
         } else {
             return new Edge(v2, v1, false);
@@ -283,46 +313,46 @@ public class Visualizer {
             Vertex startPoint = screenPoints[pointIndex];
             Vertex endPoint = screenPoints[nextPointIndex];
             gc.strokeLine(
-                    startPoint.getX(), startPoint.getY(),
-                    endPoint.getX(), endPoint.getY()
+                    startPoint.x, startPoint.y,
+                    endPoint.x, endPoint.y
             );
 
             if (showArrows) {
                 drawHead(startPoint, endPoint);
             }
             if (showVertexNumber) {
-                gc.fillText(String.valueOf(pointIndex), startPoint.getX(), startPoint.getY());
+                gc.fillText(String.valueOf(pointIndex), startPoint.x, startPoint.y);
             }
         }
     }
 
-    double phi = toRadians(10);
+    double phi = Math.toRadians(10);
     double barb = 20;
 
     private void drawHead(Vertex startPoint, Vertex endPoint) {
 
-        double dx = endPoint.getX() - startPoint.getX();
-        double dy = endPoint.getY() - startPoint.getY();
+        double dx = endPoint.x - startPoint.x;
+        double dy = endPoint.y - startPoint.y;
         double theta = Math.atan2(dy, dx);
         double rho = theta + phi;
 
-        double x1 = endPoint.getX() - barb * Math.cos(rho);
-        double y1 = endPoint.getY() - barb * Math.sin(rho);
-        gc.strokeLine(endPoint.getX(), endPoint.getY(), x1, y1);
+        double x1 = endPoint.x - barb * Math.cos(rho);
+        double y1 = endPoint.y - barb * Math.sin(rho);
+        gc.strokeLine(endPoint.x, endPoint.y, x1, y1);
 
         rho = theta - phi;
-        double x2 = endPoint.getX() - barb * Math.cos(rho);
-        double y2 = endPoint.getY() - barb * Math.sin(rho);
-        gc.strokeLine(endPoint.getX(), endPoint.getY(), x2, y2);
+        double x2 = endPoint.x - barb * Math.cos(rho);
+        double y2 = endPoint.y - barb * Math.sin(rho);
+        gc.strokeLine(endPoint.x, endPoint.y, x2, y2);
 
         gc.strokeLine(x1, y1, x2, y2);
     }
 
     private Vertex toScreenPoint(Vertex vertex) {
         return new Vertex(
-                xSize / 2 + vertex.getX() * dist / (vertex.getZ()),
-                ySize / 2 - vertex.getY() * dist / (vertex.getZ()),
-                1 / (vertex.getZ())
+                xSize / 2 + vertex.x * dist / (vertex.z),
+                ySize / 2 - vertex.y * dist / (vertex.z),
+                1 / (vertex.z)
         );
     }
 
