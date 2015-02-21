@@ -37,7 +37,7 @@ public class Main extends Application {
     private int height = 600;
     private engine.scene.Scene scene;
 
-    private long limitFps = 120;
+    private long limitFps = 60;
 
     private Player predefinedPositions[] = {
             new Player(new Vertex(0, 0, -400), 0, 0, 90),

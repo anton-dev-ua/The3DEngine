@@ -217,7 +217,7 @@ public class Visualizer {
             y++;
             yOffset += rowSize;
 
-        } while (y < 600 && (activeEdges.size() > 0 || edgeList[y] != null));
+        } while (y < xSize && (activeEdges.size() > 0 || edgeList[y] != null));
 
     }
 
