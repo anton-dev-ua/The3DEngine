@@ -23,8 +23,8 @@ public class Mesh {
         return vertices.toArray(new Vertex[vertices.size()]);
     }
 
-    public Face[] getFaces() {
-        return faces.toArray(new Face[faces.size()]);
+    public List<Face> getFaces() {
+        return faces;
     }
 
     public void alignWithCamera(Camera camera) {
@@ -65,13 +65,10 @@ public class Mesh {
     public void cutByCameraPyramid(Camera camera) {
         Vertex[] cutPlanes = camera.getCutPlanes();
 
-        faces = new ArrayList<>();
-        for (Face face : originalFaces) {
-            double d = -originalVertices[face.getVertexIndices()[0]].dot(face.normal);
-            if (camera.getPosition().dot(face.getNormal()) + d > 0) {
-                faces.add(face);
-            }
-        }
+        faces = new ArrayList<>(originalFaces.length);
+
+        removeBackFaces(camera);
+
         vertices = new ArrayList<>(originalVertices.length);
         for (Vertex vertex : originalVertices) {
             vertices.add(new Vertex(vertex));
@@ -79,6 +76,15 @@ public class Mesh {
 
         for (int i = 0; i < cutPlanes.length; i += 2) {
             cutByPlane(cutPlanes[i], cutPlanes[i + 1]);
+        }
+    }
+
+    private void removeBackFaces(Camera camera) {
+        for (Face face : originalFaces) {
+            double d = -originalVertices[face.getVertexIndices()[0]].dot(face.normal);
+            if (camera.getPosition().dot(face.getNormal()) + d > 0) {
+                faces.add(face);
+            }
         }
     }
 
@@ -90,9 +96,8 @@ public class Mesh {
             }
         }
 
-        List<Face> tempFaces = new ArrayList<>();
-        tempFaces.addAll(faces);
-        faces = new ArrayList<>();
+        List<Face> tempFaces = faces;
+        faces = new ArrayList<>(faces.size());
         for (Face face : tempFaces) {
             cutFace(n, o, face);
         }

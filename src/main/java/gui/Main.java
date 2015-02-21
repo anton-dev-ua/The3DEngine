@@ -37,7 +37,7 @@ public class Main extends Application {
     private int height = 600;
     private engine.scene.Scene scene;
 
-    private long limitFps = 60;
+    private long limitFps = 120;
 
     private Player predefinedPositions[] = {
             new Player(new Vertex(0, 0, -400), 0, 0, 90),
@@ -91,7 +91,8 @@ public class Main extends Application {
 
 //        scene.setMesh(aCube().withEdgeLength(200).build());
 //        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/room-with-corner-stand.dae").getFile()));
-        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms.dae").getFile()));
+//        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms.dae").getFile()));
+        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms-colored.dae").getFile()));
 
         visualizer = new Visualizer(scene, width, height, pPosition.fov);
         visualizer.setAngleX((int) pPosition.verticalAngle);

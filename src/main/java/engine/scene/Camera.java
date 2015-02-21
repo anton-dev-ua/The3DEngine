@@ -150,4 +150,8 @@ public class Camera {
     public double getAngleX() {
         return angleX;
     }
+
+    public Vertex getDirection() {
+        return p;
+    }
 }

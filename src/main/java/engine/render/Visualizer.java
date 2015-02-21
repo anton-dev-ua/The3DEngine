@@ -1,5 +1,6 @@
 package engine.render;
 
+import engine.model.ColorRGB;
 import engine.model.Face;
 import engine.model.Mesh;
 import engine.model.Vertex;
@@ -109,7 +110,7 @@ public class Visualizer {
             gc.fillText(String.format("VA   : %s", angleX), 10, 35);
             gc.fillText(String.format("pos  : %s", moveVector), 10, 65);
             gc.fillText(String.format("verts: %s", mesh.getVisibleVerticesCount()), 10, 80);
-            gc.fillText(String.format("faces: %s", mesh.getFaces().length), 10, 95);
+            gc.fillText(String.format("faces: %s", mesh.getFaces().size()), 10, 95);
             gc.fillText(String.format("mouse: %,3.0f, %,3.0f", mouseSceneX, mouseSceneY), 10, 110);
         }
 
@@ -162,6 +163,41 @@ public class Visualizer {
     }
 
     private void drawFace(Face face) {
+
+        ColorRGB ambient = scene.getAmbient();
+        ColorRGB sunColor = scene.getSunColor();
+
+        Vertex cameraLightVector = scene.getCamera().getDirection().normalize().multiply(-1);
+
+        Vertex sunVector = scene.getSunVector();
+        float cosAngleToSun = (float) sunVector.dot(face.normal);
+        float cosAngleToCamera = (float) cameraLightVector.dot(face.normal);
+        ColorRGB cameraColor = new ColorRGB(100, 100, 100);
+
+        ColorRGB lightColors[] = {ambient, sunColor, cameraColor};
+        float cosAngleToLight[] = {1, cosAngleToSun, cosAngleToCamera};
+
+        float intensityR = 0;
+        float intensityG = 0;
+        float intensityB = 0;
+        for (int i = 0; i < lightColors.length; i++) {
+            float cosValue = cosAngleToLight[i] >=0 ? cosAngleToLight[i] : 0;
+            intensityR += (float) lightColors[i].red * cosValue;
+            intensityG += (float) lightColors[i].green * cosValue;
+            intensityB += (float) lightColors[i].blue * cosValue;
+        }
+
+        intensityR /= 255;
+        intensityG /= 255;
+        intensityB /= 255;
+
+        ColorRGB faceColor = face.color;
+        ColorRGB color = new ColorRGB(
+                (int) (faceColor.red * intensityR),
+                (int) (faceColor.green * intensityG),
+                (int) (faceColor.blue * intensityB)
+        );
+
         int[] vertexIndices = face.getVertexIndices();
 
         List[] edgeList = new ArrayList[(int) ySize + 2];
@@ -170,13 +206,13 @@ public class Visualizer {
 
         if (edgeList[minY] == null) return;
 
-        List<Edge> activeEdges = new LinkedList<>();
+        List<Edge> activeEdges = new ArrayList<>();
         int y = minY;
         int yOffset = y * rowSize;
         do {
             nextRow(edgeList[y], activeEdges);
 
-            drawLine(face, activeEdges, yOffset);
+            drawLine(face, activeEdges, yOffset, color);
 
             y++;
             yOffset += rowSize;
@@ -185,7 +221,7 @@ public class Visualizer {
 
     }
 
-    private void drawLine(Face face, List<Edge> activeEdges, int yOffset) {
+    private void drawLine(Face face, List<Edge> activeEdges, int yOffset, ColorRGB color) {
         Iterator<Edge> activeEdgesIterator = activeEdges.iterator();
         while (activeEdgesIterator.hasNext()) {
             Edge edge1 = activeEdgesIterator.next();
@@ -203,7 +239,7 @@ public class Visualizer {
             if (endBuffX >= 0 && endBuffX < zBuffer.length && endBuffX < buffer.length) {
                 while (buffX < endBuffX) {
                     if (w > zBuffer[buffX]) {
-                        buffer[buffX] = face.color.value;
+                        buffer[buffX] = color.value;
                         zBuffer[buffX] = w;
                     }
                     buffX++;
@@ -212,10 +248,6 @@ public class Visualizer {
             }
 
         }
-    }
-
-    private void removeUnactiveEdges(List<Edge> activeEdges) {
-        activeEdges.removeIf(edge -> edge.dy <= 0);
     }
 
     private void nextRow(List activatedEdges, List<Edge> activeEdges) {
@@ -229,10 +261,6 @@ public class Visualizer {
         Collections.sort(activeEdges, (e1, e2) -> e1.x < e2.x ? -1 : 1);
 
     }
-
-//    private void sort(List<Edge> activeEdges) {
-//        Collections.sort(activeEdges);
-//    }
 
     private int calcEdges(Face face, int[] vertexIndices, List[] edgeList) {
         int minY = (int) ySize + 1;

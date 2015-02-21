@@ -1,11 +1,16 @@
 package engine.scene;
 
+import engine.model.ColorRGB;
 import engine.model.Mesh;
 import engine.model.MeshPreProcessor;
+import engine.model.Vertex;
 
 public class Scene {
     private Mesh mesh;
     private Camera camera;
+    private ColorRGB ambient = new ColorRGB(60, 60, 60);
+    private Vertex sunVector = new Vertex(0, 1000, -200).normalize();
+    private ColorRGB sunColor = new ColorRGB(180, 180, 180);
 
     public void setMesh(Mesh mesh) {
         this.mesh = mesh;
@@ -22,5 +27,29 @@ public class Scene {
 
     public Camera getCamera() {
         return camera;
+    }
+
+    public ColorRGB getAmbient() {
+        return ambient;
+    }
+
+    public void setAmbient(ColorRGB ambient) {
+        this.ambient = ambient;
+    }
+
+    public Vertex getSunVector() {
+        return sunVector;
+    }
+
+    public void setSunVector(Vertex sunVector) {
+        this.sunVector = sunVector;
+    }
+
+    public ColorRGB getSunColor() {
+        return sunColor;
+    }
+
+    public void setSunColor(ColorRGB sunColor) {
+        this.sunColor = sunColor;
     }
 }
