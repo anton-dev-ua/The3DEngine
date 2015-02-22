@@ -85,6 +85,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+
         robot = new Robot();
         scene = new engine.scene.Scene();
         scene.setCamera(new Camera(width, height, pPosition.fov));
@@ -92,7 +93,8 @@ public class Main extends Application {
 //        scene.setMesh(aCube().withEdgeLength(200).build());
 //        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/room-with-corner-stand.dae").getFile()));
 //        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms.dae").getFile()));
-        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms-colored.dae").getFile()));
+//        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms-colored.dae").getFile()));
+        scene.setMesh(new ColladaReader().readFile(getClass().getResource("/few-rooms-textured.dae").getFile()));
 
         visualizer = new Visualizer(scene, width, height, pPosition.fov);
         visualizer.setAngleX((int) pPosition.verticalAngle);

@@ -1,9 +1,8 @@
 package engine.scene;
 
-import engine.model.ColorRGB;
-import engine.model.Mesh;
-import engine.model.MeshPreProcessor;
-import engine.model.Vertex;
+import engine.model.*;
+
+import java.util.Map;
 
 public class Scene {
     private Mesh mesh;
@@ -11,10 +10,14 @@ public class Scene {
     private ColorRGB ambient = new ColorRGB(60, 60, 60);
     private Vertex sunVector = new Vertex(0, 1000, -200).normalize();
     private ColorRGB sunColor = new ColorRGB(180, 180, 180);
+    private Map<String, Texture> textureMap;
 
     public void setMesh(Mesh mesh) {
         this.mesh = mesh;
-        MeshPreProcessor.calculateNormals(mesh);
+        MeshPreProcessor meshPreProcessor = new MeshPreProcessor(mesh);
+        meshPreProcessor.calculateNormals();
+        textureMap = meshPreProcessor.processTextures();
+
     }
 
     public Mesh getMesh() {

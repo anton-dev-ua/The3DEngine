@@ -4,10 +4,11 @@ import java.util.List;
 
 public class Face {
     public int vertexIndices[];
-    public ColorRGB color = new ColorRGB((byte) 255, (byte) 255, (byte) 255);
+    public Material material = new Material(new ColorRGB((byte) 255, (byte) 255, (byte) 255), null);
     public Vertex normal;
     public int index;
     public List<Integer> vertexTypes;
+    public Vertex[] textureCoord;
 
     public Face(int... vertexIndices) {
         this.vertexIndices = vertexIndices;

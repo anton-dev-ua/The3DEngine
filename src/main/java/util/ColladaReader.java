@@ -1,9 +1,6 @@
 package util;
 
-import engine.model.ColorRGB;
-import engine.model.Face;
-import engine.model.Mesh;
-import engine.model.Vertex;
+import engine.model.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -13,13 +10,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Consumer;
 
-import static java.lang.Math.random;
+import static java.lang.Math.max;
 import static java.lang.String.format;
 import static javax.xml.xpath.XPathConstants.NODESET;
 
@@ -35,8 +32,10 @@ public class ColladaReader {
     private List<Face> faces = new ArrayList<>();
     private List<Vertex> vertices = new ArrayList<>();
     private Document document;
-    private Map<String, ColorRGB> materialMap = new HashMap<>();
+    private Map<String, Material> materialMap = new HashMap<>();
     private Map<String, String> materialBindMap = new HashMap<>();
+    private Map<String, Material> effectMap = new HashMap<>();
+    private Map<String, String> imageMap = new HashMap<>();
 
     public Mesh readFile(String fileName) throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
         init(fileName);
@@ -67,25 +66,13 @@ public class ColladaReader {
     }
 
     private void parseMaterials() throws XPathExpressionException {
-        NodeList effects = evaluateNodeset("//library_effects/effect");
-
-        Map<String, ColorRGB>  effectMap = new HashMap<>();
-        for (int effectIndex = 0; effectIndex < effects.getLength(); effectIndex++) {
-            Node effect = effects.item(effectIndex);
-            String id = extractValue(effect, "@id");
-            String colorLine = extractValue(effect, ".//color");
-            String[] colorParts = colorLine.split(" ");
-            effectMap.put(id, new ColorRGB(
-                    (int) (Float.valueOf(colorParts[0]) * 255),
-                    (int) (Float.valueOf(colorParts[1]) * 255),
-                    (int) (Float.valueOf(colorParts[2]) * 255)
-            ));
-        }
+//        parseImages();
+        parseEffects();
 
 
         NodeList materials = evaluateNodeset("//library_materials/material");
 
-        for(int materialIndex = 0; materialIndex < materials.getLength(); materialIndex++) {
+        for (int materialIndex = 0; materialIndex < materials.getLength(); materialIndex++) {
             Node material = materials.item(materialIndex);
             String materialId = extractValue(material, "@id");
             String effectId = extractValue(material, ".//instance_effect/@url").substring(1);
@@ -94,8 +81,49 @@ public class ColladaReader {
 
     }
 
+    private void parseImages() throws XPathExpressionException {
+        iterateNodes("//library_images/image", image -> {
+            String imageId = extractValue(image, "@id");
+            String imageFile = extractValue(image, "init_from/text()");
+            imageMap.put(imageId, imageFile);
+        });
+    }
+
+    private void parseEffects() throws XPathExpressionException {
+        iterateNodes("//library_effects/effect", effect -> {
+            String id = extractValue(effect, "@id");
+            String colorLine = extractValue(effect, ".//profile_COMMON/technique/lambert/diffuse/color");
+            String textureId = extractValue(effect, ".//profile_COMMON/technique/lambert/diffuse/texture/@texture");
+
+            ColorRGB color;
+            String imageFile = null;
+
+            if (!colorLine.trim().isEmpty()) {
+                String[] colorParts = colorLine.split(" ");
+                color = new ColorRGB(
+                        (int) (Float.valueOf(colorParts[0]) * 255),
+                        (int) (Float.valueOf(colorParts[1]) * 255),
+                        (int) (Float.valueOf(colorParts[2]) * 255));
+            } else {
+                color = new ColorRGB(255, 255, 255);
+            }
+
+            if (!textureId.trim().isEmpty()) {
+                String samplerSourceId = extractValue(effect, ".//*[@sid='%s']/sampler2D/source/text()", textureId);
+                String imageId = extractValue(effect, ".//*[@sid='%s']/surface/init_from/text()", samplerSourceId);
+                imageFile = extractValue(document, "//library_images/image[@id='%s']/init_from/text()", imageId);
+            }
+
+            effectMap.put(id, new Material(color, imageFile));
+        });
+    }
+
     private NodeList evaluateNodeset(String expression) throws XPathExpressionException {
         return (NodeList) xPath.compile(expression).evaluate(document, NODESET);
+    }
+
+    private NodeList evaluateNodeset(Node node, String expression) throws XPathExpressionException {
+        return (NodeList) xPath.compile(expression).evaluate(node, NODESET);
     }
 
     private NodeList geometries() throws XPathExpressionException {
@@ -116,11 +144,33 @@ public class ColladaReader {
 
     private void parseGeometry(Node geometry) throws XPathExpressionException {
 
-        String id = xPath.compile("@id").evaluate(geometry);
-        ColorRGB color = materialMap.get(materialBindMap.get(id));
+        String id = extractValue(geometry, "@id");
+        Material material = materialMap.get(materialBindMap.get(id));
 
         String verticesInputId = extractValue(geometry, VERTICES_INPUT_ID);
         String verticesCoordLine = extractValue(geometry, format(VERTICES_LINE, verticesInputId.substring(1)));
+
+        NodeList inputs = evaluateNodeset(geometry, ".//polylist/input");
+
+        OffsetData offsetData = new OffsetData();
+
+        iterateNodes(inputs, node -> {
+            String offsetName = extractValue(node, "@semantic");
+            Integer offset = Integer.valueOf(extractValue(node, "@offset"));
+            String sourceId = extractValue(node, "@source").substring(1);
+
+            if ("VERTEX".equals(offsetName)) {
+                offsetData.vertexOffset = offset;
+            }
+            if ("TEXCOORD".equals(offsetName)) {
+                offsetData.texCoordOffset = offset;
+                offsetData.texCoordSourceId = sourceId;
+            }
+
+            offsetData.maxOffset = max(offsetData.maxOffset, offset);
+        });
+
+        int vStride = offsetData.maxOffset + 1;
 
         String verticesCoord[] = verticesCoordLine.split(" ");
 
@@ -148,32 +198,77 @@ public class ColladaReader {
         String facesVertexCountLine = extractValue(geometry, FACES_VERTEX_COUNT_LINE);
         String facesVerticesLine = extractValue(geometry, FACES_VERTICES_LINE);
 
+        Vertex[] texCoordVertex = {};
+        if (offsetData.containsTextureCoord()) {
+            String facesTextureVerticesLine = extractValue(geometry, format(".//mesh/source[@id=\"%s\"]/float_array/text()", offsetData.texCoordSourceId));
+            Integer texCoordVertexCount = Integer.valueOf(extractValue(geometry, format(".//mesh/source[@id=\"%s\"]//accessor/@count", offsetData.texCoordSourceId)));
+
+            texCoordVertex = new Vertex[texCoordVertexCount];
+            String[] facesTextureVertices = facesTextureVerticesLine.split(" ");
+            for (int texCoordIndex = 0; texCoordIndex < texCoordVertexCount; texCoordIndex++) {
+                texCoordVertex[texCoordIndex] = new Vertex(
+                        Double.valueOf(facesTextureVertices[texCoordIndex * 2]),
+                        Double.valueOf(facesTextureVertices[texCoordIndex * 2 + 1]),
+                        0
+                );
+                System.out.println(texCoordVertex[texCoordIndex]);
+            }
+        }
+
         int[] facesVerticesCount = Arrays.stream(facesVertexCountLine.split(" ")).mapToInt(Integer::valueOf).toArray();
         int[] facesVertices = Arrays.stream(facesVerticesLine.split(" ")).mapToInt(Integer::valueOf).toArray();
 
         int position = 0;
         for (int faceVertexCount : facesVerticesCount) {
+
             int[] vertexIndices = new int[faceVertexCount];
-            for (int i = 0; i < faceVertexCount; i++) {
-                vertexIndices[i] = vertexRemap[facesVertices[position]];
-                position++;
+            Vertex[] textureCoord = null;
+            if (offsetData.containsTextureCoord()) {
+                textureCoord = new Vertex[faceVertexCount];
             }
+            for (int i = 0; i < faceVertexCount; i++) {
+                vertexIndices[i] = vertexRemap[facesVertices[position + offsetData.vertexOffset]];
+                if (offsetData.containsTextureCoord()) {
+                    textureCoord[i] = texCoordVertex[facesVertices[position + offsetData.texCoordOffset]];
+                }
+                position += vStride;
+            }
+
             Face face = new Face(vertexIndices);
             faces.add(face);
-            if (color == null) {
-                int r = (int) (50 + random() * 150);// * faceIndex / facesVerticesCount.length);
-                int g = (int) (50 + random() * 150);// * faceIndex / facesVerticesCount.length);
-                int b = (int) (50 + random() * 150);// * faceIndex / facesVerticesCount.length);
-                face.color = new ColorRGB(r, g, b);
-            } else {
-                face.color = color;
-            }
+            face.textureCoord = textureCoord;
+            face.material = material;
             face.index = faces.size() - 1;
         }
     }
 
-    private String extractValue(Node node, String xpath) throws XPathExpressionException {
-        XPathExpression expression = xPath.compile(xpath);
-        return expression.evaluate(node);
+    public static class OffsetData {
+        int maxOffset;
+        int vertexOffset;
+        int texCoordOffset;
+
+        public String texCoordSourceId;
+
+        private boolean containsTextureCoord() {
+            return texCoordSourceId != null;
+        }
+    }
+
+    private void iterateNodes(String expression, Consumer<Node> consumer) throws XPathExpressionException {
+        iterateNodes(evaluateNodeset(expression), consumer);
+    }
+
+    private void iterateNodes(NodeList nodeList, Consumer<Node> consumer) {
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            consumer.accept(nodeList.item(i));
+        }
+    }
+
+    private String extractValue(Node node, String xpath, Object... args) {
+        try {
+            return xPath.compile(format(xpath, args)).evaluate(node);
+        } catch (XPathExpressionException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

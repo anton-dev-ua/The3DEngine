@@ -143,7 +143,7 @@ public class Mesh {
             for (int t = 0; t < newVertexIndices.size(); t++) newVertexIndicesForFace[t] = newVertexIndices.get(t);
 
             Face newFace = new Face(newVertexIndicesForFace);
-            newFace.color = face.color;
+            newFace.material = face.material;
             newFace.normal = face.normal;
             newFace.index = face.index;
             faces.add(newFace);

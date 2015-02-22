@@ -1,7 +1,15 @@
 package engine.model;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -13,8 +21,13 @@ import static java.lang.Math.signum;
 public class MeshPreProcessor {
     public static final int LESS_180 = 1;
     public static final int GREATER_180 = -1;
+    private Mesh mesh;
 
-    public static void calculateNormals(Mesh mesh) {
+    public MeshPreProcessor(Mesh mesh) {
+        this.mesh = mesh;
+    }
+
+    public void calculateNormals() {
         for (Face face : mesh.originalFaces) {
             {
                 Vertex[] projXYPoints = getProjection(mesh.originalVertices, face, vertex -> new Vertex(vertex.x, vertex.y, 0));
@@ -141,7 +154,7 @@ public class MeshPreProcessor {
             if (found) {
                 Face triangle = new Face(face.vertexIndices[i1], face.vertexIndices[i2], face.vertexIndices[i3]);
                 triangle.normal = face.normal;
-                triangle.color = face.color;
+                triangle.material = face.material;
                 triangle.index = face.index;
                 faceTrianglesList.add(triangle);
                 pointIndices.remove(1 + offset);
@@ -156,7 +169,7 @@ public class MeshPreProcessor {
 
         Face triangle = new Face(face.vertexIndices[pointIndices.get(0)], face.vertexIndices[pointIndices.get(1)], face.vertexIndices[pointIndices.get(2)]);
         triangle.normal = face.normal;
-        triangle.color = face.color;
+        triangle.material = face.material;
         triangle.index = face.index;
         faceTrianglesList.add(triangle);
         return faceTrianglesList;
@@ -178,5 +191,25 @@ public class MeshPreProcessor {
             projection[i] = project.apply(originalVertices[face.vertexIndices[i]]);
         }
         return projection;
+    }
+
+    public Map<String, Texture> processTextures() {
+        Map<String, Texture> textureMap = new HashMap<>();
+        for (Face face : mesh.originalFaces) {
+            if (face.material.imageFile != null && !textureMap.containsKey(face.material.imageFile)) {
+                BufferedImage img;
+                try {
+                    img = ImageIO.read(new File(getClass().getResource("/" + face.material.imageFile).getFile()));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                DataBuffer dataBuffer = img.getRaster().getDataBuffer();
+                if (dataBuffer instanceof DataBufferByte) {
+                    byte[] data = ((DataBufferByte) dataBuffer).getData();
+                    textureMap.put(face.material.imageFile, new Texture(img.getWidth(), img.getHeight(), data));
+                }
+            }
+        }
+        return textureMap;
     }
 }

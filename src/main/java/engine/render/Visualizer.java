@@ -172,7 +172,7 @@ public class Visualizer {
     private void drawFace(Face face) {
 
         Intensity intensity = litColor(face);
-        ColorRGB faceColor = face.color;
+        ColorRGB faceColor = face.material.color;
         ColorRGB color = new ColorRGB(
                 intensityTable[faceColor.red][intensity.red],
                 intensityTable[faceColor.green][intensity.green],
