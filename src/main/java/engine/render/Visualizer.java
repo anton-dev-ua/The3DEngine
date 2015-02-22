@@ -44,10 +44,17 @@ public class Visualizer {
     private boolean useZBuffer = true;
     private double mouseSceneX;
     private double mouseSceneY;
+    private int intensityTable[][] = new int[256][256];
 
     public Visualizer(Scene scene, double xSize, double ySize, double fov) {
         this.scene = scene;
         setScreen(xSize, ySize, fov);
+
+        for (int color = 0; color <= 255; color++) {
+            for (int intensity = 0; intensity <= 255; intensity++) {
+                intensityTable[color][intensity] = color * intensity / 255;
+            }
+        }
 
 //        showOnlyFace.add(7);
 //        showOnlyFace.add(21);
@@ -164,38 +171,12 @@ public class Visualizer {
 
     private void drawFace(Face face) {
 
-        ColorRGB ambient = scene.getAmbient();
-        ColorRGB sunColor = scene.getSunColor();
-
-        Vertex cameraLightVector = scene.getCamera().getDirection().normalize().multiply(-1);
-
-        Vertex sunVector = scene.getSunVector();
-        float cosAngleToSun = (float) sunVector.dot(face.normal);
-        float cosAngleToCamera = (float) cameraLightVector.dot(face.normal);
-        ColorRGB cameraColor = new ColorRGB(100, 100, 100);
-
-        ColorRGB lightColors[] = {ambient, sunColor, cameraColor};
-        float cosAngleToLight[] = {1, cosAngleToSun, cosAngleToCamera};
-
-        float intensityR = 0;
-        float intensityG = 0;
-        float intensityB = 0;
-        for (int i = 0; i < lightColors.length; i++) {
-            float cosValue = cosAngleToLight[i] >=0 ? cosAngleToLight[i] : 0;
-            intensityR += (float) lightColors[i].red * cosValue;
-            intensityG += (float) lightColors[i].green * cosValue;
-            intensityB += (float) lightColors[i].blue * cosValue;
-        }
-
-        intensityR /= 255;
-        intensityG /= 255;
-        intensityB /= 255;
-
+        Intensity intensity = litColor(face);
         ColorRGB faceColor = face.color;
         ColorRGB color = new ColorRGB(
-                (int) (faceColor.red * intensityR),
-                (int) (faceColor.green * intensityG),
-                (int) (faceColor.blue * intensityB)
+                intensityTable[faceColor.red][intensity.red],
+                intensityTable[faceColor.green][intensity.green],
+                intensityTable[faceColor.blue][intensity.blue]
         );
 
         int[] vertexIndices = face.getVertexIndices();
@@ -212,7 +193,7 @@ public class Visualizer {
         do {
             nextRow(edgeList[y], activeEdges);
 
-            drawLine(face, activeEdges, yOffset, color);
+            drawLine(activeEdges, yOffset, color);
 
             y++;
             yOffset += rowSize;
@@ -221,7 +202,42 @@ public class Visualizer {
 
     }
 
-    private void drawLine(Face face, List<Edge> activeEdges, int yOffset, ColorRGB color) {
+    private Intensity litColor(Face face) {
+
+
+        ColorRGB ambient = scene.getAmbient();
+        ColorRGB sunColor = scene.getSunColor();
+
+        Vertex cameraLightVector = scene.getCamera().getDirection().normalize().multiply(-1);
+
+        Vertex sunVector = scene.getSunVector();
+        float cosAngleToSun = (float) sunVector.dot(face.normal);
+        float cosAngleToCamera = (float) cameraLightVector.dot(face.normal);
+        ColorRGB cameraColor = new ColorRGB(100, 100, 100);
+
+        ColorRGB lightColors[] = {ambient, sunColor, cameraColor};
+        float cosAngleToLight[] = {1, cosAngleToSun, cosAngleToCamera};
+
+        Intensity intensity = new Intensity();
+        for (int i = 0; i < lightColors.length; i++) {
+            float cosValue = cosAngleToLight[i] >= 0 ? cosAngleToLight[i] : 0;
+            intensity.red += (float) lightColors[i].red * cosValue;
+            intensity.green += (float) lightColors[i].green * cosValue;
+            intensity.blue += (float) lightColors[i].blue * cosValue;
+        }
+
+        if(intensity.red > 255) intensity.red = 255;
+        if(intensity.green > 255) intensity.green = 255;
+        if(intensity.blue > 255) intensity.blue = 255;
+
+        return intensity;
+    }
+
+    public static class Intensity {
+        int red, green, blue;
+    }
+
+    private void drawLine(List<Edge> activeEdges, int yOffset, ColorRGB color) {
         Iterator<Edge> activeEdgesIterator = activeEdges.iterator();
         while (activeEdgesIterator.hasNext()) {
             Edge edge1 = activeEdgesIterator.next();
