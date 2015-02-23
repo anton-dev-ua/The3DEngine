@@ -1,9 +1,6 @@
 package engine.render;
 
-import engine.model.ColorRGB;
-import engine.model.Face;
-import engine.model.Mesh;
-import engine.model.Vertex;
+import engine.model.*;
 import engine.scene.Camera;
 import engine.scene.Player;
 import engine.scene.Scene;
@@ -16,6 +13,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 import java.util.*;
+
+import static java.lang.Math.round;
 
 public class Visualizer {
 
@@ -172,12 +171,12 @@ public class Visualizer {
     private void drawFace(Face face) {
 
         Intensity intensity = litColor(face);
-        ColorRGB faceColor = face.material.color;
-        ColorRGB color = new ColorRGB(
-                intensityTable[faceColor.red][intensity.red],
-                intensityTable[faceColor.green][intensity.green],
-                intensityTable[faceColor.blue][intensity.blue]
-        );
+//        ColorRGB faceColor = face.material.color;
+//        ColorRGB color = new ColorRGB(
+//                intensityTable[faceColor.red][intensity.red],
+//                intensityTable[faceColor.green][intensity.green],
+//                intensityTable[faceColor.blue][intensity.blue]
+//        );
 
         int[] vertexIndices = face.getVertexIndices();
 
@@ -193,7 +192,7 @@ public class Visualizer {
         do {
             nextRow(edgeList[y], activeEdges);
 
-            drawLine(activeEdges, yOffset, color);
+            drawLine(activeEdges, yOffset, face.material, intensity);
 
             y++;
             yOffset += rowSize;
@@ -226,9 +225,9 @@ public class Visualizer {
             intensity.blue += (float) lightColors[i].blue * cosValue;
         }
 
-        if(intensity.red > 255) intensity.red = 255;
-        if(intensity.green > 255) intensity.green = 255;
-        if(intensity.blue > 255) intensity.blue = 255;
+        if (intensity.red > 255) intensity.red = 255;
+        if (intensity.green > 255) intensity.green = 255;
+        if (intensity.blue > 255) intensity.blue = 255;
 
         return intensity;
     }
@@ -237,8 +236,14 @@ public class Visualizer {
         int red, green, blue;
     }
 
-    private void drawLine(List<Edge> activeEdges, int yOffset, ColorRGB color) {
+    private void drawLine(List<Edge> activeEdges, int yOffset, Material materal, Intensity intensity) {
+
         Iterator<Edge> activeEdgesIterator = activeEdges.iterator();
+        ColorRGB color;
+        Texture texture = null;
+        if (materal.imageFile != null) {
+            texture = scene.getTextureMap().get(materal.imageFile);
+        }
         while (activeEdgesIterator.hasNext()) {
             Edge edge1 = activeEdgesIterator.next();
             if (edge1.dy <= 0) activeEdgesIterator.remove();
@@ -246,20 +251,63 @@ public class Visualizer {
             Edge edge2 = activeEdgesIterator.next();
             if (edge2.dy <= 0) activeEdgesIterator.remove();
 
-            int startX = (int) Math.round(edge1.x);
+            int startX = (int) round(edge1.x);
             int buffX = yOffset + startX;
-            int endBuffX = yOffset + (int) Math.round(edge2.x);
+            int endBuffX = yOffset + (int) round(edge2.x);
 
             double w = edge1.w;
             double dwx = (edge2.w - edge1.w) / (edge2.x - edge1.x);
+
+            double u = edge1.u, v = edge1.v;
+            double dux = (edge2.u - edge1.u) / (edge2.x - edge1.x);
+            double dvx = (edge2.v - edge1.v) / (edge2.x - edge1.x);
+
+
             if (endBuffX >= 0 && endBuffX < zBuffer.length && endBuffX < buffer.length) {
                 while (buffX < endBuffX) {
+
+                    if (edge1.tv1 != null) {
+                        int tu = (int) round(u / w * texture.width) % texture.width;
+                        int tv = (int) round(v / w * texture.height) % texture.height;
+
+                        if(tu<0) tu = texture.width + tu;
+                        if(tv<0) tv = texture.height + tv;
+
+                        int red = texture.buffer[tv * texture.width * 3 + tu * 3] & 0xFF;
+                        int green = texture.buffer[tv * texture.width * 3 + tu * 3 + 1] & 0xFF;
+                        int blue = texture.buffer[tv * texture.width * 3 + tu * 3 + 2] & 0xFF;
+
+                        color = new ColorRGB(
+                                intensityTable[red][intensity.red],
+                                intensityTable[green][intensity.green],
+                                intensityTable[blue][intensity.blue]
+                        );
+//
+//                        if ((int) (u / w * 10) % 10 == 0 || (int) (v / w * 20) % 10 == 0) {
+//                            color = new ColorRGB(0, 0, 0);
+//                        } else {
+//                            color = new ColorRGB(
+//                                    intensityTable[255][intensity.red],
+//                                    intensityTable[255][intensity.green],
+//                                    intensityTable[255][intensity.blue]
+//                            );
+//                        }
+                    } else {
+                        color = new ColorRGB(
+                                intensityTable[materal.color.red][intensity.red],
+                                intensityTable[materal.color.green][intensity.green],
+                                intensityTable[materal.color.blue][intensity.blue]
+                        );
+                    }
+
                     if (w > zBuffer[buffX]) {
                         buffer[buffX] = color.value;
                         zBuffer[buffX] = w;
                     }
                     buffX++;
                     w += dwx;
+                    u += dux;
+                    v += dvx;
                 }
             }
 
@@ -288,11 +336,18 @@ public class Visualizer {
             Vertex v1 = screenPoints[v1i];
             Vertex v2 = screenPoints[v2i];
 
-            if ((int) Math.round(v1.y) - (int) Math.round(v2.y) == 0) {
+
+            Vertex tv1 = null, tv2 = null;
+            if (face.hasTexCoord()) {
+                tv1 = face.textCoord[i];
+                tv2 = face.textCoord[(i + 1) % n];
+            }
+
+            if ((int) round(v1.y) - (int) round(v2.y) == 0) {
                 continue;
             }
 
-            Edge edge = calcEdge(v1, v2);
+            Edge edge = calcEdge(v1, v2, tv1, tv2);
             edge.face = face;
 
             addToEdgeList(edgeList, edge);
@@ -302,11 +357,11 @@ public class Visualizer {
         return minY;
     }
 
-    private Edge calcEdge(Vertex v1, Vertex v2) {
+    private Edge calcEdge(Vertex v1, Vertex v2, Vertex tv1, Vertex tv2) {
         if (v1.y < v2.y) {
-            return new Edge(v1, v2, true);
+            return new Edge(v1, v2, tv1, tv2, true);
         } else {
-            return new Edge(v2, v1, false);
+            return new Edge(v2, v1, tv2, tv1, false);
         }
     }
 

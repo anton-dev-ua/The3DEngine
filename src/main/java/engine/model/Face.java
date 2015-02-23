@@ -8,7 +8,7 @@ public class Face {
     public Vertex normal;
     public int index;
     public List<Integer> vertexTypes;
-    public Vertex[] textureCoord;
+    public Vertex[] textCoord;
 
     public Face(int... vertexIndices) {
         this.vertexIndices = vertexIndices;
@@ -24,5 +24,9 @@ public class Face {
 
     public Vertex getNormal() {
         return normal;
+    }
+
+    public boolean hasTexCoord() {
+        return textCoord != null;
     }
 }

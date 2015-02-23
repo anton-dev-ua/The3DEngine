@@ -118,34 +118,54 @@ public class Mesh {
         } else if (hasInside && hasOutside) {
 
             List<Integer> newVertexIndices = new ArrayList<>(20);
+            List<Vertex> newTexCoord = new ArrayList<>(20);
+
             for (int j = 0; j < vertexIndices.length; j++) {
+                int j2 = j < vertexIndices.length - 1 ? j + 1 : 0;
                 int vi1 = vertexIndices[j];
-                int vi2 = vertexIndices[j < vertexIndices.length - 1 ? j + 1 : 0];
+                int vi2 = vertexIndices[j2];
                 Vertex v1 = vertices.get(vi1);
                 Vertex v2 = vertices.get(vi2);
 
                 if (!v1.isOutsideCameraPyramid()) {
                     newVertexIndices.add(vi1);
+                    if(face.hasTexCoord()) {
+                        newTexCoord.add(face.textCoord[j]);
+                    }
                 }
 
                 if (v1.isOutsideCameraPyramid() != v2.isOutsideCameraPyramid()) {
                     double k = n.dot(o.minus(v1)) / n.dot(v2.minus(v1));
                     Vertex v = v1.plus(v2.minus(v1).multiply(k));
 
-                    vertices.add(v);
 
+                    if(face.hasTexCoord()) {
+                        Vertex tv = face.textCoord[j].plus(face.textCoord[j2].minus(face.textCoord[j]).multiply(k));
+                        newTexCoord.add(tv);
+                    }
+
+                    vertices.add(v);
                     newVertexIndices.add(vertices.size() - 1);
                 }
 
             }
 
             int[] newVertexIndicesForFace = new int[newVertexIndices.size()];
-            for (int t = 0; t < newVertexIndices.size(); t++) newVertexIndicesForFace[t] = newVertexIndices.get(t);
+            Vertex[] newTexCoordForFace = new Vertex[newTexCoord.size()];
+            for (int t = 0; t < newVertexIndices.size(); t++) {
+                newVertexIndicesForFace[t] = newVertexIndices.get(t);
+                if(face.hasTexCoord()) {
+                    newTexCoordForFace[t] = newTexCoord.get(t);
+                }
+            }
 
             Face newFace = new Face(newVertexIndicesForFace);
             newFace.material = face.material;
             newFace.normal = face.normal;
             newFace.index = face.index;
+            if(face.hasTexCoord()) {
+                newFace.textCoord = newTexCoordForFace;
+            }
             faces.add(newFace);
         }
     }

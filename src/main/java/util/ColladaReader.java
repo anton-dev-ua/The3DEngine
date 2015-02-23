@@ -208,7 +208,7 @@ public class ColladaReader {
             for (int texCoordIndex = 0; texCoordIndex < texCoordVertexCount; texCoordIndex++) {
                 texCoordVertex[texCoordIndex] = new Vertex(
                         Double.valueOf(facesTextureVertices[texCoordIndex * 2]),
-                        Double.valueOf(facesTextureVertices[texCoordIndex * 2 + 1]),
+                        -Double.valueOf(facesTextureVertices[texCoordIndex * 2 + 1]),
                         0
                 );
                 System.out.println(texCoordVertex[texCoordIndex]);
@@ -236,7 +236,7 @@ public class ColladaReader {
 
             Face face = new Face(vertexIndices);
             faces.add(face);
-            face.textureCoord = textureCoord;
+            face.textCoord = textureCoord;
             face.material = material;
             face.index = faces.size() - 1;
         }

@@ -55,4 +55,8 @@ public class Scene {
     public void setSunColor(ColorRGB sunColor) {
         this.sunColor = sunColor;
     }
+
+    public Map<String, Texture> getTextureMap() {
+        return textureMap;
+    }
 }

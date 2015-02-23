@@ -6,8 +6,14 @@ import engine.model.Vertex;
 import static java.lang.Math.round;
 
 public class Edge implements Comparable<Edge> {
-    private final Vertex v1;
-    private final Vertex v2;
+    double v;
+    double u;
+    private double dv;
+    private double du;
+    private double v0;
+    private Vertex v1;
+    private Vertex v2;
+    private double u0;
     int y;
     double x0, x;
     int dy;
@@ -15,9 +21,11 @@ public class Edge implements Comparable<Edge> {
     double w0, dw, w;
     boolean starting;
     public Face face;
+    Vertex tv1;
+    Vertex tv2;
 
 
-    public Edge(Vertex v1, Vertex v2, boolean starting) {
+    public Edge(Vertex v1, Vertex v2, Vertex tv1, Vertex tv2, boolean starting) {
         y = (int) round(v1.y);
         x0 = v1.x;
         dy = (int) round(v2.y) - (int) round(v1.y);
@@ -27,8 +35,22 @@ public class Edge implements Comparable<Edge> {
         x = x0 - dx;
         w = w0 - dw;
         this.starting = starting;
+
+        if (tv1 != null && tv2 != null) {
+            u0 = tv1.x * w0;
+            v0 = tv1.y * w0;
+
+            du = (tv2.x * v2.z - u0) / (v2.y - v1.y);
+            dv = (tv2.y * v2.z - v0) / (v2.y - v1.y);
+
+            u = u0 - du;
+            v = v0 - dv;
+        }
+
         this.v1 = v1;
         this.v2 = v2;
+        this.tv1 = tv1;
+        this.tv2 = tv2;
     }
 
     @Override
@@ -58,6 +80,8 @@ public class Edge implements Comparable<Edge> {
     public void nextY() {
         x += dx;
         w += dw;
+        u += du;
+        v += dv;
         dy--;
     }
 }

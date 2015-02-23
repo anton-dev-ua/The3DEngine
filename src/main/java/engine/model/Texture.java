@@ -2,10 +2,10 @@ package engine.model;
 
 public class Texture {
 
-    int width;
-    int height;
+    public int width;
+    public int height;
 
-    byte[] buffer;
+    public byte[] buffer;
 
     public Texture(int width, int height, byte[] buffer) {
         this.width = width;
