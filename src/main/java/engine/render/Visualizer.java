@@ -43,7 +43,7 @@ public class Visualizer {
     private boolean useZBuffer = true;
     private double mouseSceneX;
     private double mouseSceneY;
-    private int intensityTable[][] = new int[256][256];
+    private int intensityTable[] = new int[256 * 256];
 
     public Visualizer(Scene scene, double xSize, double ySize, double fov) {
         this.scene = scene;
@@ -51,7 +51,7 @@ public class Visualizer {
 
         for (int color = 0; color <= 255; color++) {
             for (int intensity = 0; intensity <= 255; intensity++) {
-                intensityTable[color][intensity] = color * intensity / 255;
+                intensityTable[(color << 8) + intensity] = color * intensity / 255;
             }
         }
 
@@ -236,13 +236,24 @@ public class Visualizer {
         int red, green, blue;
     }
 
-    private void drawLine(List<Edge> activeEdges, int yOffset, Material materal, Intensity intensity) {
+    private void drawLine(List<Edge> activeEdges, int yOffset, Material materal, final Intensity intensity) {
 
         Iterator<Edge> activeEdgesIterator = activeEdges.iterator();
-        ColorRGB color;
+        int tu = 0;
+        int tv = 0;
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+        int pos = 0;
+        int colorValue = 0;
+        int ired = intensity.red;
+        int igreen = intensity.green;
+        int iblue = intensity.blue;
+        byte[] textureBuffer = null;
         Texture texture = null;
         if (materal.imageFile != null) {
             texture = scene.getTextureMap().get(materal.imageFile);
+            textureBuffer = texture.buffer;
         }
         while (activeEdgesIterator.hasNext()) {
             Edge edge1 = activeEdgesIterator.next();
@@ -266,42 +277,28 @@ public class Visualizer {
             if (endBuffX >= 0 && endBuffX < zBuffer.length && endBuffX < buffer.length) {
                 while (buffX < endBuffX) {
 
-                    if (edge1.tv1 != null) {
-                        int tu = (int) round(u / w * texture.width) % texture.width;
-                        int tv = (int) round(v / w * texture.height) % texture.height;
+                    if (textureBuffer != null) {
+                        tu = (int) round(u / w * texture.width) % texture.width;
+                        tv = (int) round(v / w * texture.height) % texture.height;
+                        pos = tv * texture.width * 3 + tu * 3;
 
-                        if(tu<0) tu = texture.width + tu;
-                        if(tv<0) tv = texture.height + tv;
+                        red = textureBuffer[pos + 2] & 0xFF;
+                        green = textureBuffer[pos + 1] & 0xFF;
+                        blue = textureBuffer[pos] & 0xFF;
 
-                        int red = texture.buffer[tv * texture.width * 3 + tu * 3] & 0xFF;
-                        int green = texture.buffer[tv * texture.width * 3 + tu * 3 + 1] & 0xFF;
-                        int blue = texture.buffer[tv * texture.width * 3 + tu * 3 + 2] & 0xFF;
-
-                        color = new ColorRGB(
-                                intensityTable[red][intensity.red],
-                                intensityTable[green][intensity.green],
-                                intensityTable[blue][intensity.blue]
-                        );
-//
-//                        if ((int) (u / w * 10) % 10 == 0 || (int) (v / w * 20) % 10 == 0) {
-//                            color = new ColorRGB(0, 0, 0);
-//                        } else {
-//                            color = new ColorRGB(
-//                                    intensityTable[255][intensity.red],
-//                                    intensityTable[255][intensity.green],
-//                                    intensityTable[255][intensity.blue]
-//                            );
-//                        }
+                        colorValue = (255 << 24) +
+                                (intensityTable[(red << 8) + ired] << 16) +
+                                (intensityTable[(green << 8) + igreen] << 8) +
+                                intensityTable[(blue << 8) + iblue];
                     } else {
-                        color = new ColorRGB(
-                                intensityTable[materal.color.red][intensity.red],
-                                intensityTable[materal.color.green][intensity.green],
-                                intensityTable[materal.color.blue][intensity.blue]
-                        );
+                        colorValue = (255 << 24) +
+                                (intensityTable[(materal.color.red << 8) + ired] << 16) +
+                                (intensityTable[(materal.color.green << 8) + igreen] << 8) +
+                                intensityTable[(materal.color.blue << 8) + iblue];
                     }
 
                     if (w > zBuffer[buffX]) {
-                        buffer[buffX] = color.value;
+                        buffer[buffX] = colorValue;
                         zBuffer[buffX] = w;
                     }
                     buffX++;

@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static java.lang.Math.max;
+import static java.lang.Math.*;
 import static java.lang.String.format;
 import static javax.xml.xpath.XPathConstants.NODESET;
 
@@ -198,6 +198,7 @@ public class ColladaReader {
         String facesVertexCountLine = extractValue(geometry, FACES_VERTEX_COUNT_LINE);
         String facesVerticesLine = extractValue(geometry, FACES_VERTICES_LINE);
 
+        double minU = 0, minV = 0;
         Vertex[] texCoordVertex = {};
         if (offsetData.containsTextureCoord()) {
             String facesTextureVerticesLine = extractValue(geometry, format(".//mesh/source[@id=\"%s\"]/float_array/text()", offsetData.texCoordSourceId));
@@ -211,7 +212,22 @@ public class ColladaReader {
                         -Double.valueOf(facesTextureVertices[texCoordIndex * 2 + 1]),
                         0
                 );
-                System.out.println(texCoordVertex[texCoordIndex]);
+
+                minU = min(texCoordVertex[texCoordIndex].x, minU);
+                minV = min(texCoordVertex[texCoordIndex].y, minV);
+            }
+        }
+
+        if (minU < 0) {
+            double shift = ceil(abs(minU));
+            for (int i = 0; i < texCoordVertex.length; i++) {
+                texCoordVertex[i].x += shift;
+            }
+        }
+        if (minV < 0) {
+            double shift = ceil(abs(minV));
+            for (int i = 0; i < texCoordVertex.length; i++) {
+                texCoordVertex[i].y += shift;
             }
         }
 

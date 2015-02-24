@@ -34,7 +34,7 @@ public class Main3 {
         scene = new Scene();
         scene.setCamera(new Camera(width, height, pPosition.fov));
 
-        scene.setMesh(new ColladaReader().readFile(Main3.class.getResource("/few-rooms.dae").getFile()));
+        scene.setMesh(new ColladaReader().readFile(Main3.class.getResource("/few-rooms-textured.dae").getFile()));
 
         visualizer = new Visualizer(scene, width, height, pPosition.fov);
         visualizer.setAngleX((int) pPosition.verticalAngle);
