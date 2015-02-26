@@ -81,14 +81,6 @@ public class ColladaReader {
 
     }
 
-    private void parseImages() throws XPathExpressionException {
-        iterateNodes("//library_images/image", image -> {
-            String imageId = extractValue(image, "@id");
-            String imageFile = extractValue(image, "init_from/text()");
-            imageMap.put(imageId, imageFile);
-        });
-    }
-
     private void parseEffects() throws XPathExpressionException {
         iterateNodes("//library_effects/effect", effect -> {
             String id = extractValue(effect, "@id");
@@ -112,8 +104,9 @@ public class ColladaReader {
                 String samplerSourceId = extractValue(effect, ".//*[@sid='%s']/sampler2D/source/text()", textureId);
                 String imageId = extractValue(effect, ".//*[@sid='%s']/surface/init_from/text()", samplerSourceId);
                 imageFile = extractValue(document, "//library_images/image[@id='%s']/init_from/text()", imageId);
+            } else {
+                imageFile = "COLOR-" + color.red + "-" + color.green + "-" + color.blue;
             }
-
             effectMap.put(id, new Material(color, imageFile));
         });
     }

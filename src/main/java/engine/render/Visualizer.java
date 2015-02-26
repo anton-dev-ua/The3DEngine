@@ -43,7 +43,7 @@ public class Visualizer {
     private boolean useZBuffer = true;
     private double mouseSceneX;
     private double mouseSceneY;
-    private int intensityTable[] = new int[256 * 256];
+    private int intensityTable[][] = new int[256][256];
 
     public Visualizer(Scene scene, double xSize, double ySize, double fov) {
         this.scene = scene;
@@ -51,7 +51,7 @@ public class Visualizer {
 
         for (int color = 0; color <= 255; color++) {
             for (int intensity = 0; intensity <= 255; intensity++) {
-                intensityTable[(color << 8) + intensity] = color * intensity / 255;
+                intensityTable[color][intensity] = color * intensity / 255;
             }
         }
 
@@ -249,12 +249,10 @@ public class Visualizer {
         int ired = intensity.red;
         int igreen = intensity.green;
         int iblue = intensity.blue;
-        byte[] textureBuffer = null;
-        Texture texture = null;
-        if (materal.imageFile != null) {
-            texture = scene.getTextureMap().get(materal.imageFile);
-            textureBuffer = texture.buffer;
-        }
+
+        Texture texture = scene.getTextureMap().get(materal.imageFile);
+        byte[] textureBuffer = texture.buffer;
+
         while (activeEdgesIterator.hasNext()) {
             Edge edge1 = activeEdgesIterator.next();
             if (edge1.dy <= 0) activeEdgesIterator.remove();
@@ -274,10 +272,11 @@ public class Visualizer {
             double dvx = (edge2.v - edge1.v) / (edge2.x - edge1.x);
 
 
-            if (endBuffX >= 0 && endBuffX < zBuffer.length && endBuffX < buffer.length) {
+            if (endBuffX >= 0 && endBuffX < zBuffer.length && endBuffX < buffer.length)
                 while (buffX < endBuffX) {
 
-                    if (textureBuffer != null) {
+                    if (w > zBuffer[buffX]) {
+
                         tu = (int) round(u / w * texture.width) % texture.width;
                         tv = (int) round(v / w * texture.height) % texture.height;
                         pos = tv * texture.width * 3 + tu * 3;
@@ -287,17 +286,10 @@ public class Visualizer {
                         blue = textureBuffer[pos] & 0xFF;
 
                         colorValue = (255 << 24) +
-                                (intensityTable[(red << 8) + ired] << 16) +
-                                (intensityTable[(green << 8) + igreen] << 8) +
-                                intensityTable[(blue << 8) + iblue];
-                    } else {
-                        colorValue = (255 << 24) +
-                                (intensityTable[(materal.color.red << 8) + ired] << 16) +
-                                (intensityTable[(materal.color.green << 8) + igreen] << 8) +
-                                intensityTable[(materal.color.blue << 8) + iblue];
-                    }
+                                (intensityTable[red][ired] << 16) +
+                                (intensityTable[green][igreen] << 8) +
+                                intensityTable[blue][iblue];
 
-                    if (w > zBuffer[buffX]) {
                         buffer[buffX] = colorValue;
                         zBuffer[buffX] = w;
                     }
@@ -306,7 +298,7 @@ public class Visualizer {
                     u += dux;
                     v += dvx;
                 }
-            }
+
 
         }
     }

@@ -195,21 +195,44 @@ public class MeshPreProcessor {
 
     public Map<String, Texture> processTextures() {
         Map<String, Texture> textureMap = new HashMap<>();
+        Texture texture;
         for (Face face : mesh.originalFaces) {
             if (face.material.imageFile != null && !textureMap.containsKey(face.material.imageFile)) {
-                BufferedImage img;
-                try {
-                    img = ImageIO.read(new File(getClass().getResource("/" + face.material.imageFile).getFile()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+
+                if (!face.material.imageFile.startsWith("COLOR")) {
+                    texture = readImageFromFile(face.material.imageFile);
+                } else {
+                    texture = buildColorTexture(face);
                 }
-                DataBuffer dataBuffer = img.getRaster().getDataBuffer();
-                if (dataBuffer instanceof DataBufferByte) {
-                    byte[] data = ((DataBufferByte) dataBuffer).getData();
-                    textureMap.put(face.material.imageFile, new Texture(img.getWidth(), img.getHeight(), data));
-                }
+
+                textureMap.put(face.material.imageFile, texture);
+
             }
         }
         return textureMap;
+    }
+
+    private Texture buildColorTexture(Face face) {
+        Texture texture;
+        texture = new Texture(1, 1, new byte[]{
+                (byte) face.material.color.blue,
+                (byte) face.material.color.green,
+                (byte) face.material.color.red
+        });
+        return texture;
+    }
+
+    private Texture readImageFromFile(String imageFile) {
+        Texture texture;
+        BufferedImage img;
+        try {
+            img = ImageIO.read(new File(getClass().getResource("/" + imageFile).getFile()));
+            DataBuffer dataBuffer = img.getRaster().getDataBuffer();
+            byte[] data = ((DataBufferByte) dataBuffer).getData();
+            texture = new Texture(img.getWidth(), img.getHeight(), data);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return texture;
     }
 }
