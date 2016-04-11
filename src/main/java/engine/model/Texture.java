@@ -2,6 +2,7 @@ package engine.model;
 
 public class Texture {
 
+    public int lenght;
     public int width;
     public int height;
 
@@ -11,5 +12,6 @@ public class Texture {
         this.width = width;
         this.height = height;
         this.buffer = buffer;
+        lenght = width*height;
     }
 }

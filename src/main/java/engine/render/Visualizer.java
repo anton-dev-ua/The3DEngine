@@ -239,8 +239,6 @@ public class Visualizer {
     private void drawLine(List<Edge> activeEdges, int yOffset, Material materal, final Intensity intensity) {
 
         Iterator<Edge> activeEdgesIterator = activeEdges.iterator();
-        int tu = 0;
-        int tv = 0;
         int red = 0;
         int green = 0;
         int blue = 0;
@@ -261,42 +259,84 @@ public class Visualizer {
             if (edge2.dy <= 0) activeEdgesIterator.remove();
 
             int startX = (int) round(edge1.x);
+            int endX = (int) round(edge2.x);
+            int x = startX;
             int buffX = yOffset + startX;
             int endBuffX = yOffset + (int) round(edge2.x);
 
             double w = edge1.w;
             double dwx = (edge2.w - edge1.w) / (edge2.x - edge1.x);
 
-            double u = edge1.u, v = edge1.v;
+            double u1 = edge1.u, v1 = edge1.v;
             double dux = (edge2.u - edge1.u) / (edge2.x - edge1.x);
             double dvx = (edge2.v - edge1.v) / (edge2.x - edge1.x);
 
+            double tu1 = u1 / w * texture.width;
+            double tv1 = v1 / w * texture.height;
+            int u;
+            int v;
 
             if (endBuffX >= 0 && endBuffX < zBuffer.length && endBuffX < buffer.length)
                 while (buffX < endBuffX) {
 
-                    if (w > zBuffer[buffX]) {
+                    int length = (endX - x > 16) ? 16 : endX - x;
 
-                        tu = (int) round(u / w * texture.width) % texture.width;
-                        tv = (int) round(v / w * texture.height) % texture.height;
-                        pos = tv * texture.width * 3 + tu * 3;
+                    double z2 = 1 / (w + dwx * length);
+                    double u2 = u1 + dux * length;
+                    double v2 = v1 + dvx * length;
+                    double tu2 = u2 * z2 * texture.width;
+                    double tv2 = v2 * z2 * texture.height;
 
-                        red = textureBuffer[pos + 2] & 0xFF;
-                        green = textureBuffer[pos + 1] & 0xFF;
-                        blue = textureBuffer[pos] & 0xFF;
+                    double dtux = (tu2 - tu1) / length;
+                    double dtvx = (tv2 - tv1) / length;
 
-                        colorValue = (255 << 24) +
-                                (intensityTable[red][ired] << 16) +
-                                (intensityTable[green][igreen] << 8) +
-                                intensityTable[blue][iblue];
+                    double tu = tu1;
+                    double tv = tv1;
 
-                        buffer[buffX] = colorValue;
-                        zBuffer[buffX] = w;
+                    double tpos = tv1 * texture.width + tu1;
+                    double dtposx = dtvx * texture.width + dtux;
+
+
+                    while (length > 0) {
+                        if (w > zBuffer[buffX]) {
+
+                            u = (int) round(tu) % texture.width;
+                            v = (int) round(tv) % texture.height;
+                            pos = (v * texture.width + u) *3;
+//                            pos = (pos<<1);
+//                            pos = ((int) round(tpos) % texture.lenght) * 3;
+
+                            red = textureBuffer[pos + 2];// & 0xFF;
+                            green = textureBuffer[pos + 1];// & 0xFF;
+                            blue = textureBuffer[pos];// & 0xFF;
+
+//                            red = (red+1) & 0xFF;
+//                            green = (green+1) & 0xFF;
+//                            blue = (blue+1) & 0xFF;
+                            colorValue = (255 << 24) +
+                                    (intensityTable[red & 0xFF][ired] << 16) +
+                                    (intensityTable[green & 0xFF][igreen] << 8) +
+                                    intensityTable[blue & 0xFF][iblue];
+//                                    (red << 16) +
+//                                    (green << 8) +
+//                                    blue;
+
+                            buffer[buffX] = colorValue;
+                            zBuffer[buffX] = w;
+                        }
+                        buffX++;
+                        w += dwx;
+                        u1 += dux;
+                        v1 += dvx;
+
+                        tu += dtux;
+                        tv += dtvx;
+                        tpos += dtposx;
+                        length--;
+                        x++;
                     }
-                    buffX++;
-                    w += dwx;
-                    u += dux;
-                    v += dvx;
+                    tu1 = tu2;
+                    tv1 = tv2;
                 }
 
 

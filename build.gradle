@@ -5,6 +5,7 @@ repositories {
 }
 
 dependencies {
+    compile 'org.aspectj:aspectjrt:1.8.5'
     testCompile 'junit:junit:4.11'
     testCompile 'org.assertj:assertj-core:1.6.1'
 }
