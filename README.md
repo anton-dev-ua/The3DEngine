@@ -11,5 +11,5 @@ included in [Graphics Programming Black Book](http://www.gamedev.net/page/resour
 Experiment of building game 3D renderer engine. 
 "Levels" can be created with [Sketchup](http://www.sketchup.com)
 
-![](img/screenshot.png)
+![](img/screenshot.jpg)
 
